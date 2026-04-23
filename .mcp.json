@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "skillex": {
+      "command": "npx",
+      "args": ["-y", "github:tut1vog/skillex-mcp"],
+      "env": {
+        "SKILLS_MCP_REPOS": "anthropics/skills"
+      }
+    }
+  }
+}

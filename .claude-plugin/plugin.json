@@ -1,0 +1,14 @@
+{
+  "name": "cc-project-management-plugin",
+  "version": "0.1.0",
+  "description": "Three orchestration subagents for Claude Code (cc-project-initializer, cc-project-advisor, cc-project-director) that discover intent, audit existing code, and autonomously drive execution — bundled with the skillex-mcp server for fuzzy skill discovery.",
+  "author": {
+    "name": "tut1vog"
+  },
+  "license": "MIT",
+  "homepage": "https://github.com/tut1vog/cc-project-management-plugin",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tut1vog/cc-project-management-plugin"
+  }
+}

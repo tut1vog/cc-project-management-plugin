@@ -1,0 +1,13 @@
+{
+  "name": "tut1vog-plugins",
+  "owner": {
+    "name": "tut1vog"
+  },
+  "plugins": [
+    {
+      "name": "cc-project-management-plugin",
+      "source": ".",
+      "description": "Three orchestration subagents for Claude Code (cc-project-initializer, cc-project-advisor, cc-project-director) bundled with the skillex-mcp server."
+    }
+  ]
+}
