@@ -6,9 +6,9 @@
 - Bump **only** `.claude-plugin/plugin.json` `version` when releasing. `.claude-plugin/marketplace.json` has no per-plugin version field in the current manifest — if a `version` is added to the marketplace plugin entry later, it must match `plugin.json` exactly.
 - Version scheme: [SemVer](https://semver.org/). Pre-1.0 releases bump MINOR for any user-visible change; bump PATCH only for documentation / metadata fixes that don't change what the plugin loads.
 - Never tag a release if any of the following haven't passed:
-  1. `python -m json.tool .claude-plugin/plugin.json` — valid JSON.
-  2. `python -m json.tool .claude-plugin/marketplace.json` — valid JSON.
-  3. `python -m json.tool .mcp.json` — valid JSON.
+  1. `python3 -m json.tool .claude-plugin/plugin.json` — valid JSON.
+  2. `python3 -m json.tool .claude-plugin/marketplace.json` — valid JSON.
+  3. `python3 -m json.tool .mcp.json` — valid JSON.
   4. `claude --plugin-dir ./` — plugin loads and all three agents appear in `/agents`.
 - Release procedure:
   1. Update `plugin.json` `version` to the target, commit with `chore: bump plugin.json to v<x.y.z>`.
@@ -26,8 +26,8 @@ Valid release flow for a minor bump:
 git add .claude-plugin/plugin.json
 git commit -m "chore: bump plugin.json to v0.2.0"
 # verify
-python -m json.tool .claude-plugin/plugin.json
-python -m json.tool .mcp.json
+python3 -m json.tool .claude-plugin/plugin.json
+python3 -m json.tool .mcp.json
 claude --plugin-dir ./  # manual check: /agents lists all three
 # tag
 git tag v0.2.0

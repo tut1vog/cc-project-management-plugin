@@ -11,7 +11,7 @@
 - Keep `.mcp.json` minimal. Do not add servers the agents don't actively use. Every MCP server launches a subprocess on every Claude Code session; bloat has real cost.
 - End users must have **Node ≥ 20** for `npx` to launch the server. Document this in `README.md` prerequisites.
 - After any edit to `.mcp.json`:
-  1. `python -m json.tool .mcp.json` — validate JSON.
+  1. `python3 -m json.tool .mcp.json` — validate JSON.
   2. `claude --plugin-dir ./` — confirm the server starts; check `/mcp` inside the session.
 
 ## Examples

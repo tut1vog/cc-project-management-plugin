@@ -32,9 +32,9 @@ Note: `agents/` lives at the **plugin root**, not under `.claude/agents/`. That 
 ## Canonical Commands
 - Local plugin test:       `claude --plugin-dir ./`
 - Reload without restart:  `/reload-plugins` (inside a Claude Code session)
-- Validate JSON manifest:  `python -m json.tool .claude-plugin/plugin.json`
-- Validate marketplace:    `python -m json.tool .claude-plugin/marketplace.json`
-- Validate MCP config:     `python -m json.tool .mcp.json`
+- Validate JSON manifest:  `python3 -m json.tool .claude-plugin/plugin.json`
+- Validate marketplace:    `python3 -m json.tool .claude-plugin/marketplace.json`
+- Validate MCP config:     `python3 -m json.tool .mcp.json`
 - Smoke-test skillex MCP:  `npx -y github:tut1vog/skillex-mcp --help`  *(first run clones + builds skillex-mcp; subsequent runs cached)*
 - Release (tag + push):    `git tag v<semver> && git push origin main --tags`
 
