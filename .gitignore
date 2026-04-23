@@ -1,0 +1,17 @@
+# Claude Code — local-only settings (permissions, per-maintainer overrides)
+.claude/settings.local.json
+.claude/agents/cc-project-*.md
+
+# Director working memory — committed only when cc-project-director decides to,
+# ignored by default so stray local iterations don't leak into history.
+plan.md
+project-brief.md
+
+# OS / editor noise
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
