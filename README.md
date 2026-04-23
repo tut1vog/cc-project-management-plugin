@@ -1,6 +1,46 @@
 # Claude Code Project Subagents
 
-A set of subagents that manage and automate Claude Code projects — from initial setup through ongoing development. Drop them into any project to get structured planning, execution, and verification powered by Claude Code's agent system.
+A Claude Code plugin that manages and automates Claude Code projects — from initial setup through ongoing development. Install it once and get three orchestration subagents (`cc-project-initializer`, `cc-project-advisor`, `cc-project-director`) plus the `skillex-mcp` server for structured planning, execution, and verification across every project you work in.
+
+## Prerequisites
+
+- **Claude Code with plugin support.** You need a version of Claude Code that recognizes the `/plugin` slash commands (`/plugin marketplace add`, `/plugin install`).
+- **Node ≥ 20** on your machine. The bundled `skillex-mcp` server is launched via `npx`, which requires a modern Node runtime. Check with `node --version`.
+- **First-launch delay.** The very first Claude Code session after installing this plugin takes roughly 30–120 seconds to start, because `skillex-mcp`'s `prepare` script compiles TypeScript at install time. Subsequent launches are served from the `npx` cache and start fast.
+
+## Installation
+
+Run these two slash commands inside a Claude Code session:
+
+```
+/plugin marketplace add github:tut1vog/cc-project-management-plugin
+/plugin install cc-project-management-plugin@tut1vog-plugins
+```
+
+The first command registers this repo as a single-plugin marketplace named `tut1vog-plugins`. The second installs the `cc-project-management-plugin` plugin from that marketplace. Once installed, the three agents are globally available — Claude Code auto-selects them by their `description` fields, so you can invoke them in any project without copying any files.
+
+To pick up a new version later, re-run `/plugin install cc-project-management-plugin@tut1vog-plugins` (or use whatever update command your Claude Code version provides).
+
+## Configuring skills
+
+The plugin ships a `.mcp.json` that wires up the `skillex-mcp` server with `anthropics/skills` as the baked-in default skill repository. You don't need to configure anything for the default behavior to work.
+
+If you want to point skillex at a different set of repositories, set the `SKILLS_MCP_REPOS` environment variable before launching Claude Code.
+
+Two important details about how this variable works:
+
+- **It is comma-separated.** List multiple repos as `owner1/repo1,owner2/repo2` with no spaces around the commas.
+- **Your value replaces the default — it does not extend it.** Skillex has no append semantics. If you want to keep `anthropics/skills` while adding your own, you must include `anthropics/skills` explicitly in your list.
+
+Examples:
+
+```bash
+# one-off: set for a single session
+SKILLS_MCP_REPOS="anthropics/skills,myorg/my-skills" claude
+
+# persistent: export in a shell profile (e.g. ~/.bashrc or ~/.zshrc)
+export SKILLS_MCP_REPOS="anthropics/skills,myorg/my-skills"
+```
 
 ## The Agents
 
@@ -43,34 +83,3 @@ Same flow, but starts with **cc-project-advisor** instead. It reads your codebas
 ### Ongoing development
 
 Once the project is set up, you can invoke **cc-project-director** directly with any goal — a new feature, a refactor, a bug to investigate. It follows the same plan → dispatch → verify cycle, using `plan.md` and `git log` to maintain continuity across sessions.
-
-## Installation
-
-Copy the agent files into your project:
-
-```bash
-cp .claude/agents/cc-project-initializer.md /path/to/your-project/.claude/agents/
-cp .claude/agents/cc-project-advisor.md /path/to/your-project/.claude/agents/
-cp .claude/agents/cc-project-director.md /path/to/your-project/.claude/agents/
-```
-
-Claude Code auto-selects agents by their `description` field, so they'll be available immediately.
-
-## Creating New Agents
-
-1. Create `.claude/agents/<agent-name>.md`.
-2. Add YAML frontmatter (`name` and `description`).
-3. Write the system prompt — keep it project-agnostic.
-4. Commit.
-
-### Template
-
-```markdown
----
-name: <agent-name>
-description: <one-line, action-oriented description>
----
-
-<System prompt: role, tools allowed, behavior, output format.
- No project-specific details here.>
-```
