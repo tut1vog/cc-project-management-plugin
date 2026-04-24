@@ -7,8 +7,5 @@
   },
   "license": "MIT",
   "homepage": "https://github.com/tut1vog/cc-project-management-plugin",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/tut1vog/cc-project-management-plugin"
-  }
+  "repository": "https://github.com/tut1vog/cc-project-management-plugin"
 }

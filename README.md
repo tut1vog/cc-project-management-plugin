@@ -13,7 +13,7 @@ A Claude Code plugin that manages and automates Claude Code projects — from in
 Run these two slash commands inside a Claude Code session:
 
 ```
-/plugin marketplace add github:tut1vog/cc-project-management-plugin
+/plugin marketplace add tut1vog/cc-project-management-plugin
 /plugin install cc-project-management-plugin@tut1vog-plugins
 ```
 
