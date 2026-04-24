@@ -1,4 +1,4 @@
-# cc-project-director
+# director
 
 A senior technical project director agent that plans, tracks, and verifies implementation work across sessions. It never writes application code — it coordinates subagents that do.
 
@@ -14,13 +14,13 @@ A senior technical project director agent that plans, tracks, and verifies imple
 
 ## Installation
 
-Copy `.claude/agents/cc-project-director.md` from this repo into your project's `.claude/agents/` directory. No other setup is required.
+Copy `.claude/agents/director.md` from this repo into your project's `.claude/agents/` directory. No other setup is required.
 
 ```
 your-project/
   .claude/
     agents/
-      cc-project-director.md   ← copy here
+      director.md   ← copy here
   plan.md                      ← created by the director (current state)
 ```
 
@@ -33,7 +33,7 @@ Invoke the director by name in Claude Code. It always runs Orient silently first
 ### Start a new plan
 
 ```
-Use cc-project-director to plan: add user authentication with JWT
+Use director to plan: add user authentication with JWT
 ```
 
 The director will:
@@ -55,7 +55,7 @@ After each subagent completes, the execution framework returns the results to th
 ### Change direction mid-plan
 
 ```
-Use cc-project-director — we're dropping OAuth, going with magic links instead
+Use director — we're dropping OAuth, going with magic links instead
 ```
 
 The director identifies which pending tasks are superseded, presents the impact, then revises the plan and commits the revision with a `chore(ai):` subject and a supersession journal entry in the body.
@@ -153,10 +153,10 @@ Director bookkeeping commits use the `chore(ai):` prefix so they can be filtered
 ## Workflow overview
 
 ```
-You ──→ cc-project-initializer / cc-project-advisor ──→ project-brief.md
+You ──→ initializer / advisor ──→ project-brief.md
                                                               |
                                                               ▼
-                                                        cc-project-director
+                                                        director
                                                               |
                                                           Orient
                                                           Plan (write plan.md, commit)

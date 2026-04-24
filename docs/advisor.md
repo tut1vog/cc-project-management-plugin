@@ -1,6 +1,6 @@
-# cc-project-advisor
+# advisor
 
-A senior software architect agent that audits an existing project, recommends Claude Code setup improvements, then writes the refreshed scaffolding and a handoff document for cc-project-director to plan and execute further changes.
+A senior software architect agent that audits an existing project, recommends Claude Code setup improvements, then writes the refreshed scaffolding and a handoff document for director to plan and execute further changes.
 
 ## What it does
 
@@ -10,17 +10,17 @@ A senior software architect agent that audits an existing project, recommends Cl
 - Walks through targeted discovery focused only on what it couldn't infer from code
 - Runs `git init` (if needed) and halts on a dirty tree before touching any files
 - Overwrites `CLAUDE.md`, `.claude/rules/*.md`, and `.claude/settings.json` with refreshed versions (git is the audit trail — no backup files, no diff prompts)
-- Writes a narrowed `project-brief.md` as the handoff for cc-project-director
+- Writes a narrowed `project-brief.md` as the handoff for director
 
 ## Installation
 
-Copy `.claude/agents/cc-project-advisor.md` from this repo into your project's `.claude/agents/` directory. No other setup is required.
+Copy `.claude/agents/advisor.md` from this repo into your project's `.claude/agents/` directory. No other setup is required.
 
 ```
 your-project/
   .claude/
     agents/
-      cc-project-advisor.md   <- copy here
+      advisor.md   <- copy here
 ```
 
 ## Usage
@@ -30,7 +30,7 @@ Invoke the advisor by name in Claude Code. It always runs a silent audit first �
 ### Audit an existing project
 
 ```
-Use cc-project-advisor to review this project's Claude Code setup
+Use advisor to review this project's Claude Code setup
 ```
 
 The advisor will:
@@ -43,10 +43,10 @@ The advisor will:
 
 ### After the advisor finishes
 
-Once `project-brief.md` is written, invoke cc-project-director to plan and execute the improvements:
+Once `project-brief.md` is written, invoke director to plan and execute the improvements:
 
 ```
-Use cc-project-director — read project-brief.md for the project requirements
+Use director — read project-brief.md for the project requirements
 ```
 
 ## Audit Summary
@@ -81,9 +81,9 @@ Same seven phases as the initializer, but the advisor leads each phase with what
 
 | Situation | Agent |
 |-----------|-------|
-| **New project, no code yet** | cc-project-initializer -> cc-project-director |
-| **Existing project, needs Claude Code setup** | cc-project-advisor -> cc-project-director |
-| **Multi-step implementation work** | cc-project-director |
+| **New project, no code yet** | initializer -> director |
+| **Existing project, needs Claude Code setup** | advisor -> director |
+| **Multi-step implementation work** | director |
 
 ## Tips
 

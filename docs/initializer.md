@@ -1,6 +1,6 @@
-# cc-project-initializer
+# initializer
 
-A senior software architect agent that helps you think through a new project carefully, then writes the full project scaffolding and a handoff document for cc-project-director to plan and execute the setup.
+A senior software architect agent that helps you think through a new project carefully, then writes the full project scaffolding and a handoff document for director to plan and execute the setup.
 
 ## What it does
 
@@ -9,17 +9,17 @@ A senior software architect agent that helps you think through a new project car
 - Validates tech choices via WebSearch (library maintenance, runtime versions, community best practices)
 - Introduces Claude Code features one at a time as they become relevant
 - Runs `git init` (if needed) and halts on a dirty tree so every scaffold write is cleanly diffable
-- Writes the project scaffolding — `CLAUDE.md`, `.claude/rules/*.md`, `.claude/settings.json` — and a `project-brief.md` handoff for cc-project-director
+- Writes the project scaffolding — `CLAUDE.md`, `.claude/rules/*.md`, `.claude/settings.json` — and a `project-brief.md` handoff for director
 
 ## Installation
 
-Copy `.claude/agents/cc-project-initializer.md` from this repo into your project's `.claude/agents/` directory. No other setup is required.
+Copy `.claude/agents/initializer.md` from this repo into your project's `.claude/agents/` directory. No other setup is required.
 
 ```
 your-project/
   .claude/
     agents/
-      cc-project-initializer.md   <- copy here
+      initializer.md   <- copy here
 ```
 
 ## Usage
@@ -29,17 +29,17 @@ Invoke the initializer by name in Claude Code. It always runs Discovery first �
 ### Start a new project
 
 ```
-Use cc-project-initializer to set up this project
+Use initializer to set up this project
 ```
 
 The initializer will walk you through seven phases of discovery, then — after you approve the Requirements Summary — write the scaffolding (`CLAUDE.md`, `.claude/rules/*.md`, `.claude/settings.json`) and the `project-brief.md` handoff.
 
 ### After the initializer finishes
 
-Once `project-brief.md` is written, invoke cc-project-director to plan and execute the setup:
+Once `project-brief.md` is written, invoke director to plan and execute the setup:
 
 ```
-Use cc-project-director — read project-brief.md for the project requirements
+Use director — read project-brief.md for the project requirements
 ```
 
 ## Discovery phases
@@ -70,15 +70,15 @@ Once approved, the initializer:
 2. Writes `CLAUDE.md` at the project root (stack, directory layout, canonical commands, and a Rules index listing each `.claude/rules/*.md` file with a one-line trigger — rules are loaded on demand, not auto-imported).
 3. Writes each `.claude/rules/*.md` file from the approved list, each with a focused "when to read this" trigger and project-specific content.
 4. Writes `.claude/settings.json` translating the Phase 7 permissions into `permissions.allow` / `permissions.deny` / `defaultMode`.
-5. Writes `project-brief.md` — the planning input for cc-project-director (intent, scope, director permissions, known unknowns; not a duplicate of CLAUDE.md).
+5. Writes `project-brief.md` — the planning input for director (intent, scope, director permissions, known unknowns; not a duplicate of CLAUDE.md).
 
 ## When to use this vs. other agents
 
 | Situation | Agent |
 |-----------|-------|
-| **New project, no code yet** | cc-project-initializer -> cc-project-director |
-| **Existing project, needs Claude Code setup** | cc-project-advisor |
-| **Multi-step implementation work** | cc-project-director |
+| **New project, no code yet** | initializer -> director |
+| **Existing project, needs Claude Code setup** | advisor |
+| **Multi-step implementation work** | director |
 
 ## Tips
 
