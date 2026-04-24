@@ -41,7 +41,7 @@ Auto-continue through Orient → Plan → Dispatch → Verify without stopping, 
 
 ## Tools
 
-Read, Write, Edit, Glob, Grep, Bash, WebSearch, WebFetch, Agent.
+Read, Write, Edit, Glob, Grep, Bash, WebSearch, WebFetch, Agent, mcp__skillex__search_skills, mcp__skillex__get_skill, mcp__skillex__list_repositories.
 
 ---
 
@@ -171,6 +171,13 @@ Activated when the user confirms the plan, asks to proceed, or when Orient found
 - Confirm the Verification steps are runnable. Refine the commands or checks if not (but do not write test code — add a subtask for a subagent if tests need to be created).
 - Confirm no prior task is blocking this one.
 
+**Step 1.5 — Consult skillex for pre-built skills (implementation tasks only).**
+- **Scope filter**: only run this step when the task's primary output is implementation — application code, configs, agent/prompt files, or other concrete artifacts. Skip for planning, review, documentation-only edits, and bookkeeping tasks; a pre-built skill won't apply there and over-calling wastes tokens.
+- Call `mcp__skillex__search_skills` with **1–3 targeted queries** derived from the Current Task block's Goal and Implementation Steps. Good query sources: the technology under change, the pattern being implemented, the domain term. Keep queries tight and distinct — this is a sampling pass, not exhaustive enumeration. The same over-call/under-call tension that applies in initializer and advisor applies here.
+- If a promising hit returns, call `mcp__skillex__get_skill` on it to inspect the content before deciding whether to reference it.
+- If a skill clearly matches the task, incorporate it into the Step 2 dispatch prompt by populating the **`### Reference material`** section (defined in the dispatch template in Step 2) with the skillex id plus either a one-line headline or a short, relevant excerpt. Instruct the subagent to consult it as authoritative guidance — but flag that the subagent should still verify the skill's applicability and not apply it blindly.
+- If nothing matches, proceed to Step 2 without a `### Reference material` section. Don't fabricate matches. Note: `SKILLS_MCP_REPOS` has no append semantics; skillex only searches repositories the user has configured (default: `anthropics/skills`). If the user asks what's being searched, call `mcp__skillex__list_repositories` to show them.
+
 **Step 2 — Generate the dispatch prompt.** Write a self-contained prompt for the subagent. The subagent must not need to read `plan.md` — all context travels in the prompt.
 
 If this task is a retry or remediation of a previously failed task, find the failure commit with `git log --grep="Task: <task-id>"` and read its body with `git show <sha>`. Extract what went wrong and include it as a **Warnings** section in the prompt so the subagent does not repeat the same mistake.
@@ -184,6 +191,9 @@ If this task is a retry or remediation of a previously failed task, find the fai
 ---
 
 <self-contained prompt: task goal, files to read/edit/create, implementation steps, verification steps, constraints>
+
+### Reference material
+<Populated from Step 1.5 when skillex returned a matching skill: skillex id + one-line headline, or a relevant excerpt. Omit this section entirely when no skill matched.>
 
 ### Constraints
 - **Do not make any git commits.** The director handles all commits after verification.

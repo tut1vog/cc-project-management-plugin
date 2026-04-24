@@ -7,6 +7,7 @@ A senior technical project director agent that plans, tracks, and verifies imple
 - Reads `plan.md`, recent git history, and current task context on every invocation (Orient)
 - Decomposes goals into phases and tasks, one agent session per task (Plan)
 - Produces self-contained prompts for the subagent that will do the work (Dispatch)
+- Before dispatching implementation tasks, consults the bundled `skillex` MCP server to see whether a pre-built skill already covers the work; if so, passes it through to the subagent as authoritative reference material
 - Runs verification checks after each task and updates the plan accordingly (Verify)
 - Updates project documentation after verification passes, so docs never drift from the code — reading `.claude/rules/documentation.md` (or whichever rule file handles docs in the project's Rules index) on demand
 - Reads behavioral rules from `.claude/rules/*.md` on demand, using the Rules index in `CLAUDE.md` to decide which to load for the current task
