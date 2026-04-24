@@ -8,6 +8,7 @@ A senior software architect agent that audits an existing project, recommends Cl
 - Surfaces gaps in Claude Code setup, conventions, and dependency health
 - Validates tech choices and dependency maintenance status via WebSearch
 - Walks through targeted discovery focused only on what it couldn't infer from code
+- Consults the bundled `skillex` MCP server during Phase 6 to surface pre-built skills (from the audit findings and Discovery answers) as candidate features
 - Runs `git init` (if needed) and halts on a dirty tree before touching any files
 - Overwrites `CLAUDE.md`, `.claude/rules/*.md`, and `.claude/settings.json` with refreshed versions (git is the audit trail — no backup files, no diff prompts)
 - Writes a narrowed `project-brief.md` as the handoff for director
@@ -74,7 +75,7 @@ Same seven phases as the initializer, but the advisor leads each phase with what
 | 3. Technical direction | Validates current stack, flags outdated dependencies, confirms deployment and testing |
 | 4. Collaboration | Team size, workflow, ownership |
 | 5. Standards | Reviews existing conventions, linting, commit style, license |
-| 6. Claude Code setup | Proposes features that fit, based on audit findings and discovery answers |
+| 6. Claude Code setup | Proposes features that fit, based on audit findings and discovery answers — plus pre-built skills surfaced by consulting the bundled `skillex` MCP server against those findings |
 | 7. Director permissions | Establishes what the director and subagents may do autonomously (bash commands, file ops, git, network, packages, destructive operations) |
 
 ## When to use this vs. other agents
