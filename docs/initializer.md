@@ -8,6 +8,7 @@ A senior software architect agent that helps you think through a new project car
 - Challenges vague scope, unrealistic choices, and cargo-culted tech decisions
 - Validates tech choices via WebSearch (library maintenance, runtime versions, community best practices)
 - Introduces Claude Code features one at a time as they become relevant
+- Consults the bundled `skillex` MCP server during Phase 6 to surface pre-built skills from an external catalog (default: `anthropics/skills`) as candidate features
 - Runs `git init` (if needed) and halts on a dirty tree so every scaffold write is cleanly diffable
 - Writes the project scaffolding — `CLAUDE.md`, `.claude/rules/*.md`, `.claude/settings.json` — and a `project-brief.md` handoff for director
 
@@ -53,7 +54,7 @@ The initializer asks one phase at a time, summarizing and confirming before movi
 | 3. Technical direction | Language/runtime choice and rationale, external dependencies, deployment, testing strategy — validated via WebSearch |
 | 4. Collaboration | Team size and roles, branching/review workflow, long-term ownership |
 | 5. Standards | Linting/formatting, naming/commit conventions, license |
-| 6. Claude Code setup | Which Claude Code features fit the project: CLAUDE.md, rules, commands, agents, skills, settings, MCP, hooks |
+| 6. Claude Code setup | Which Claude Code features fit the project: CLAUDE.md, rules, commands, agents, settings, MCP, hooks — plus pre-built skills surfaced by consulting the bundled `skillex` MCP server against the Discovery answers |
 | 7. Director permissions | Establishes what the director and subagents may do autonomously (bash commands, file ops, git, network, packages, destructive operations) |
 
 ### Requirements Summary
