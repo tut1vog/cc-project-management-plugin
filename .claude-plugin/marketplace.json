@@ -7,7 +7,7 @@
     {
       "name": "cc-project-management-plugin",
       "source": "./",
-      "description": "Three orchestration subagents for Claude Code (cc-project-initializer, cc-project-advisor, cc-project-director) bundled with the skillex-mcp server."
+      "description": "Three orchestration subagents for Claude Code (initializer, advisor, director) bundled with the skillex-mcp server."
     }
   ]
 }

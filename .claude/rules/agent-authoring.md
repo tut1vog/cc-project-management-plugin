@@ -8,8 +8,8 @@
 - The system prompt body must be **project-agnostic**. These agents are shipped in a plugin and dropped into unknown repos; hardcoding paths, tools, or project-specific assumptions breaks them for consumers.
 - One agent, one responsibility. If an agent has two distinct jobs, split it into two agents. Narrow scope + precise `description` is what makes auto-selection reliable.
 - State the tools the agent may use explicitly inside the body (e.g. "You have access to Read, Write, Edit, Glob, Grep, Bash, WebSearch, WebFetch."). Don't rely on implicit tool sets.
-- Cross-agent references use bare agent names (e.g. "hand off to cc-project-director"), not plugin-namespaced paths — subagents keep their bare names even when the plugin is installed.
-- When editing an existing agent, preserve its contract with the others. `cc-project-advisor` and `cc-project-initializer` both produce `project-brief.md` for `cc-project-director` to consume; changing that handoff format requires updating all three.
+- Cross-agent references use bare agent names (e.g. "hand off to director"), not plugin-namespaced paths — subagents keep their bare names even when the plugin is installed.
+- When editing an existing agent, preserve its contract with the others. `advisor` and `initializer` both produce `project-brief.md` for `director` to consume; changing that handoff format requires updating all three.
 - After any edit to `agents/*.md`, verify the plugin still loads: `claude --plugin-dir ./` then `/agents` — all expected agents must appear.
 
 ## Examples
@@ -17,7 +17,7 @@
 Good frontmatter:
 ```yaml
 ---
-name: cc-project-director
+name: director
 description: Autonomous project director for delegated end-to-end execution. Given a high-level goal, decomposes the work into a plan, dispatches subagents, verifies output, owns all git commits, and auto-continues through Orient → Plan → Dispatch → Verify with minimal user intervention.
 ---
 ```

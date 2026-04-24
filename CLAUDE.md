@@ -1,6 +1,6 @@
 # cc-project-management-plugin
 
-A Claude Code plugin bundling three orchestration subagents (`cc-project-initializer`, `cc-project-advisor`, `cc-project-director`) plus the `skillex-mcp` server, distributed as a single-plugin marketplace so users can install it globally with `/plugin install` instead of copying `.md` files into every project.
+A Claude Code plugin bundling three orchestration subagents (`initializer`, `advisor`, `director`) plus the `skillex-mcp` server, distributed as a single-plugin marketplace so users can install it globally with `/plugin install` instead of copying `.md` files into every project.
 
 ## Stack
 - Language / runtime: **none at build time** — the repo is Markdown (agent definitions, rules, docs) and JSON (plugin manifests, MCP config).
@@ -14,9 +14,9 @@ A Claude Code plugin bundling three orchestration subagents (`cc-project-initial
 │   ├── plugin.json         # plugin manifest (name, version, metadata)
 │   └── marketplace.json    # self-referential single-plugin marketplace catalog
 ├── agents/                 # subagent definitions — one .md per agent (plugin spec location)
-│   ├── cc-project-initializer.md
-│   ├── cc-project-advisor.md
-│   └── cc-project-director.md
+│   ├── initializer.md
+│   ├── advisor.md
+│   └── director.md
 ├── .mcp.json               # skillex-mcp wiring (default SKILLS_MCP_REPOS=anthropics/skills)
 ├── .claude/
 │   └── rules/              # behavioral rules for working on THIS repo, loaded on demand
@@ -24,7 +24,7 @@ A Claude Code plugin bundling three orchestration subagents (`cc-project-initial
 ├── CLAUDE.md               # this file
 ├── README.md               # consumer-facing install + usage guide
 ├── LICENSE                 # MIT
-└── project-brief.md        # planning input for cc-project-director
+└── project-brief.md        # planning input for director
 ```
 
 Note: `agents/` lives at the **plugin root**, not under `.claude/agents/`. That nested location is how consumers see agents after installation — the plugin spec requires them at the root, and `.claude-plugin/` holds only `plugin.json` + `marketplace.json`.
@@ -49,4 +49,4 @@ Each rule file below is a focused behavioral contract. Read a rule file when its
 - `.claude/rules/mcp-config.md` — read before editing `.mcp.json` or changing MCP server configuration
 
 ## Planning Context
-For current intent, scope, and how cc-project-director should operate on this repo, see `project-brief.md`. Director permissions are managed locally by the maintainer in `.claude/settings.local.json` (gitignored) — there is no committed `.claude/settings.json`.
+For current intent, scope, and how director should operate on this repo, see `project-brief.md`. Director permissions are managed locally by the maintainer in `.claude/settings.local.json` (gitignored) — there is no committed `.claude/settings.json`.
