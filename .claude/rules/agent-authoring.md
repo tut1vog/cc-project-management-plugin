@@ -11,6 +11,7 @@
 - Cross-agent references use bare agent names (e.g. "hand off to director"), not plugin-namespaced paths — subagents keep their bare names even when the plugin is installed.
 - When editing an existing agent, preserve its contract with the others. `advisor` and `initializer` both produce `project-brief.md` for `director` to consume; changing that handoff format requires updating all three.
 - After any edit to `agents/*.md`, verify the plugin still loads: `claude --plugin-dir ./` then `/agents` — all expected agents must appear.
+- `initializer` and `advisor` deliberately share their Scaffold and Handoff sections, and all three agents share the skillex-consultation pattern. When editing one of these shared blocks, update every agent that carries it in the same commit. Shared blocks: Claude Code Features table, Phase 7 Director Permissions table, Requirements Summary fields, Scaffold Steps 1–5, Handoff template, and the skillex consultation paragraph.
 
 ## Examples
 
