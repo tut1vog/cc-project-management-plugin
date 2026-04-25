@@ -1,6 +1,6 @@
 # initializer
 
-A senior software architect agent that helps you think through a new project carefully, then writes the full project scaffolding and a handoff document for director to plan and execute the setup.
+A senior Claude Code specialist agent that helps you think through a new project carefully, then writes the full project scaffolding so director can plan and execute the setup.
 
 ## What it does
 
@@ -10,22 +10,12 @@ A senior software architect agent that helps you think through a new project car
 - Introduces Claude Code features one at a time as they become relevant
 - Consults the bundled `skillex` MCP server during Phase 6 to surface pre-built skills from an external catalog (default: `anthropics/skills`) as candidate features
 - Runs `git init` (if needed) and halts on a dirty tree so every scaffold write is cleanly diffable
-- Writes the project scaffolding — `CLAUDE.md`, `.claude/rules/*.md`, `.claude/settings.json` — and a `project-brief.md` handoff for director
-
-## Installation
-
-Copy `.claude/agents/initializer.md` from this repo into your project's `.claude/agents/` directory. No other setup is required.
-
-```
-your-project/
-  .claude/
-    agents/
-      initializer.md   <- copy here
-```
+- Adds `*.local.*` to `.gitignore` so `CLAUDE.local.md` (and any other `*.local.*` Claude Code conventions) stays out of git
+- Writes the project scaffolding: `CLAUDE.md` (long-term project facts, auto-loaded), `CLAUDE.local.md` (current goal — auto-loaded; gitignored), `.claude/rules/*.md`, and `.claude/settings.json`
 
 ## Usage
 
-Invoke the initializer by name in Claude Code. It always runs Discovery first — it will not produce a handoff until requirements are confirmed.
+Invoke the initializer by name in Claude Code. It always runs Discovery first — it will not start writing scaffolding until requirements are confirmed.
 
 ### Start a new project
 
@@ -33,14 +23,14 @@ Invoke the initializer by name in Claude Code. It always runs Discovery first �
 Use initializer to set up this project
 ```
 
-The initializer will walk you through seven phases of discovery, then — after you approve the Requirements Summary — write the scaffolding (`CLAUDE.md`, `.claude/rules/*.md`, `.claude/settings.json`) and the `project-brief.md` handoff.
+The initializer will walk you through seven phases of discovery, then — after you approve the Requirements Summary — write the scaffolding (`CLAUDE.md`, `CLAUDE.local.md`, `.claude/rules/*.md`, `.claude/settings.json`).
 
 ### After the initializer finishes
 
-Once `project-brief.md` is written, invoke director to plan and execute the setup:
+Once scaffolding is written, invoke director to plan and execute the setup. `CLAUDE.local.md` is auto-loaded by Claude Code, so director picks up the current goal automatically:
 
 ```
-Use director — read project-brief.md for the project requirements
+Use director to plan and execute the project
 ```
 
 ## Discovery phases
@@ -59,19 +49,20 @@ The initializer asks one phase at a time, summarizing and confirming before movi
 
 ### Requirements Summary
 
-After all seven phases, the initializer produces a summary covering: project name/users/problem, constraints, MVP/deferred scope, stack, deployment, testing, team workflow, license, known unknowns, the concrete Claude Code setup it will write in Scaffold (exact file paths for `CLAUDE.md` sections, each `.claude/rules/*.md` file and its trigger sentence, `.claude/settings.json` permission derivation), and the filled-in Phase 7 Director Permissions table (Bash allow/deny, file creation, protected paths, git commits, network access, package management, always-confirm operations).
+After all seven phases, the initializer produces a summary covering: project name/users/problem, constraints, MVP/deferred scope, stack, deployment, testing, team workflow, license, known unknowns, the concrete Claude Code setup it will write in Scaffold (`CLAUDE.md` sections, `CLAUDE.local.md` sections, each `.claude/rules/*.md` file and its trigger sentence, `.claude/settings.json` permission derivation), and the filled-in Phase 7 Director Permissions table (Bash allow/deny, file creation, protected paths, git commits, network access, package management, always-confirm operations).
 
 Nothing is written until you approve this summary.
 
-## Scaffold + Handoff
+## Scaffold
 
 Once approved, the initializer:
 
-1. Ensures a git repo exists (`git init` if needed) and halts on a dirty tree to ask about commit/stash/abort.
-2. Writes `CLAUDE.md` at the project root (stack, directory layout, canonical commands, and a Rules index listing each `.claude/rules/*.md` file with a one-line trigger — rules are loaded on demand, not auto-imported).
+1. Ensures a git repo exists (`git init` if needed) and halts on a dirty tree to ask about commit/stash/abort. Adds `*.local.*` to `.gitignore` so the `CLAUDE.local.md` written next stays untracked.
+2. Writes `CLAUDE.md` at the project root (stack, directory layout, canonical commands, constraints, and a Rules index listing each `.claude/rules/*.md` file with a one-line trigger — rules are loaded on demand, not auto-imported) and `CLAUDE.local.md` (project overview, scope, director permissions, known unknowns) — both auto-loaded by Claude Code at session start.
 3. Writes each `.claude/rules/*.md` file from the approved list, each with a focused "when to read this" trigger and project-specific content.
 4. Writes `.claude/settings.json` translating the Phase 7 permissions into `permissions.allow` / `permissions.deny` / `defaultMode`.
-5. Writes `project-brief.md` — the planning input for director (intent, scope, director permissions, known unknowns; not a duplicate of CLAUDE.md).
+
+There is no separate handoff write — `CLAUDE.local.md` is the planning input director consults, and Claude Code auto-loads it whenever director runs.
 
 ## When to use this vs. other agents
 

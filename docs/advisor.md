@@ -1,6 +1,6 @@
 # advisor
 
-A senior software architect agent that audits an existing project, recommends Claude Code setup improvements, then writes the refreshed scaffolding and a handoff document for director to plan and execute further changes.
+A senior Claude Code specialist agent that audits an existing project, recommends Claude Code setup improvements, then writes the refreshed scaffolding so director can plan and execute further changes.
 
 ## What it does
 
@@ -10,19 +10,8 @@ A senior software architect agent that audits an existing project, recommends Cl
 - Walks through targeted discovery focused only on what it couldn't infer from code
 - Consults the bundled `skillex` MCP server during Phase 6 to surface pre-built skills (from the audit findings and Discovery answers) as candidate features
 - Runs `git init` (if needed) and halts on a dirty tree before touching any files
-- Overwrites `CLAUDE.md`, `.claude/rules/*.md`, and `.claude/settings.json` with refreshed versions (git is the audit trail — no backup files, no diff prompts)
-- Writes a narrowed `project-brief.md` as the handoff for director
-
-## Installation
-
-Copy `.claude/agents/advisor.md` from this repo into your project's `.claude/agents/` directory. No other setup is required.
-
-```
-your-project/
-  .claude/
-    agents/
-      advisor.md   <- copy here
-```
+- Adds `*.local.*` to `.gitignore` so `CLAUDE.local.md` (and any other `*.local.*` Claude Code conventions) stays out of git
+- Overwrites `CLAUDE.md`, `CLAUDE.local.md`, `.claude/rules/*.md`, and `.claude/settings.json` with refreshed versions (git is the audit trail for the tracked files — no backup files, no diff prompts)
 
 ## Usage
 
@@ -39,15 +28,15 @@ The advisor will:
 2. Present an Audit Summary
 3. Walk through targeted discovery (only asking about gaps)
 4. Produce a Requirements Summary for your approval
-5. Ensure git is initialized and the working tree is clean (halt if not)
-6. Write / overwrite `CLAUDE.md`, `.claude/rules/*.md`, `.claude/settings.json`, and `project-brief.md`
+5. Ensure git is initialized and the working tree is clean (halt if not), and add `*.local.*` to `.gitignore`
+6. Write / overwrite `CLAUDE.md`, `CLAUDE.local.md`, `.claude/rules/*.md`, and `.claude/settings.json`
 
 ### After the advisor finishes
 
-Once `project-brief.md` is written, invoke director to plan and execute the improvements:
+Once scaffolding is written, invoke director to plan and execute the improvements. `CLAUDE.local.md` is auto-loaded by Claude Code, so director picks up the current goal automatically:
 
 ```
-Use director — read project-brief.md for the project requirements
+Use director to plan and execute the improvements
 ```
 
 ## Audit Summary
@@ -57,7 +46,7 @@ The advisor reads these areas silently before asking anything:
 | Area | What it checks |
 |------|----------------|
 | Project identity | README, manifest files (package.json, pyproject.toml, Cargo.toml, etc.) |
-| Claude Code presence | CLAUDE.md, .claude/rules/, .claude/commands/, .claude/agents/, .claude/settings.json |
+| Claude Code presence | CLAUDE.md, CLAUDE.local.md, .claude/rules/, .claude/commands/, .claude/agents/, .claude/settings.json |
 | Documentation state | docs/, LICENSE, and any other documentation files |
 | Coding conventions | Linting/formatting configs (.eslintrc, .prettierrc, pyproject.toml, rustfmt.toml, etc.) |
 | Git workflow | .github/workflows/, PR templates, CODEOWNERS, Makefile CI targets |
