@@ -1,4 +1,4 @@
-# Claude Code Project Subagents
+# Claude Code Project Management Plugin
 
 A Claude Code plugin that manages and automates Claude Code projects — from initial setup through ongoing development. Install it once and get three orchestration subagents (`initializer`, `advisor`, `director`) plus the `skillex-mcp` server for structured planning, execution, and verification across every project you work in.
 
