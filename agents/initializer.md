@@ -161,7 +161,7 @@ For current goal, scope, director permissions, and known unknowns, see `CLAUDE.l
 ```markdown
 # <Project Name> — Current Goal
 
-> Long-term project facts (stack, commands, rules, constraints) live in `CLAUDE.md` and `.claude/rules/`. This file is the planning input for director: current scope and what the director may do autonomously. Director's phase/task plan itself lives in git history as `plan:` empty commits — read the latest with `git log -n 1 --grep="^plan:" --format=%H` then `git show <sha> -s --format=%B`.
+> Long-term project facts (stack, commands, rules, constraints) live in `CLAUDE.md` and `.claude/rules/`. This file is the planning input for director: current scope and what the director may do autonomously. Director's phase/task plan and per-task outcomes live in git history; see the `plan-management` skill for the format and read commands.
 
 ## Project Overview
 <What the project is, who it's for, what problem it solves.>

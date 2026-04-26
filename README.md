@@ -1,6 +1,6 @@
 # Claude Code Project Management Plugin
 
-A Claude Code plugin that manages and automates Claude Code projects — from initial setup through ongoing development. Install it once and get three orchestration subagents (`initializer`, `advisor`, `director`) plus the `skillex-mcp` server for structured planning, execution, and verification across every project you work in.
+A Claude Code plugin that manages and automates Claude Code projects — from initial setup through ongoing development. Install it once and get three orchestration subagents (`initializer`, `advisor`, `director`), the `plan-management` skill that any agent can use to read or write the project plan, and the `skillex-mcp` server, for structured planning, execution, and verification across every project you work in.
 
 ## Prerequisites
 
@@ -55,6 +55,12 @@ Same role as the initializer, but for **existing projects**. Silently audits the
 ### director
 
 The orchestrator. Reads `CLAUDE.local.md` (auto-loaded by Claude Code) for the current goal, breaks it into phases and tasks, and runs an autonomous loop — dispatching work to subagents, verifying results, and advancing the plan until complete. Stores the live plan in git history as empty `plan:` commits and records every task outcome in a `Task:` journal entry in the corresponding commit body, so `git log` is the single source of truth. It never writes application code — it plans, dispatches, and verifies. Subagents never make git commits; the director owns all git operations: a passed task is one commit bundling code + docs, a failed task or single-task supersession is a `chore(ai):` empty commit with the failure journal in the body, a plan creation or revision is an empty `plan:` commit, and pure bookkeeping events use `git commit --allow-empty` so every outcome lands in `git log`. On verification pass, the director also updates project documentation to reflect the verified change and bundles those edits into the same commit so docs never drift from reality. Behavioral rules (git conventions, testing, documentation) live in `.claude/rules/*.md`; the director reads them on demand based on the task at hand, using the Rules index in `CLAUDE.md`. Implementation code and tests are always separate tasks assigned to different agents, so the test author approaches the code as a consumer rather than the original author. The director auto-continues through its loop, only stopping when presenting a new plan for confirmation or when a subagent reports a task as infeasible.
+
+## The Skill
+
+### plan-management
+
+A bundled skill that owns the canonical format spec for `plan:` and `Task:` journal commit messages, plus the git commands to read and parse them. **Director uses it to write** new plan and task commits; **any other agent uses it to read** the current plan, derive task status (done / in-progress / pending), or look up a prior task's outcome — without needing to inline the format spec in its own prompt. Because the plan and task journal live entirely in `git log`, the skill needs only the `Bash` tool, so it works in any subagent that has shell access. Treat the skill as the single source of truth for the format: if it ever evolves, only one file changes.
 
 ## How They Work Together
 

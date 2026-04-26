@@ -14,7 +14,7 @@ A senior technical project director agent that plans, tracks, and verifies imple
 
 ## Usage
 
-Invoke the director by name in Claude Code. It always runs Orient silently first — locating the latest `plan:` commit (`git log -n 1 --grep="^plan:" --format=%H`), reading its body, walking task events since (`git log <plan-sha>..HEAD --grep="^Task:"`) to derive task status, and reading the files implicated by any in-progress task. `CLAUDE.md` is loaded automatically by Claude Code at session start, and `CLAUDE.local.md` is loaded automatically when present, so the director already has durable project facts and the current goal without an explicit read step.
+Invoke the director by name in Claude Code. It always runs Orient silently first — using the bundled `plan-management` skill to read the latest `plan:` commit and derive task status from `Task:` journal entries, then reading the files implicated by any in-progress task. `CLAUDE.md` is loaded automatically by Claude Code at session start, and `CLAUDE.local.md` is loaded automatically when present, so the director already has durable project facts and the current goal without an explicit read step.
 
 ### Start a new plan
 
@@ -53,11 +53,11 @@ The director identifies which pending tasks are superseded, presents the impact,
 | Latest `plan:` commit body | Current plan — phases and task titles | Director (each `plan:` commit supersedes the previous) |
 | `Task:` journal entries (commit bodies) | Per-task outcomes — passed, failed, superseded | Director (via commits; commits are immutable) |
 
-To read the current plan: `git log -n 1 --grep="^plan:" --format=%H` then `git show <sha> -s --format=%B`. To enumerate task outcomes since the current plan was set: `git log <plan-sha>..HEAD --grep="^Task:"`. For a specific task's history: `git log --grep="Task: N.M"`.
+The canonical format spec, read commands (latest plan, task status, task history), and write templates all live in the bundled **`plan-management`** skill. Any agent in a director-managed project can read the plan and task journal by following that skill — it requires only `Bash`, no plugin-specific tools. The illustrative examples below are kept here for skim-readers; if they ever drift from the skill, the skill is authoritative.
 
-### `plan:` commit body structure
+### `plan:` commit body — example
 
-Plan bodies are intentionally lean — only task titles, no per-task implementation detail. The rich context for each task is composed fresh in the dispatch prompt at execution time, never persisted.
+Plan bodies are intentionally lean (task titles only); rich per-task context is composed fresh in the dispatch prompt at execution time and never persisted.
 
 ```
 plan: <≤72-char summary>
@@ -76,9 +76,9 @@ Goal: <high-level goal description>
 Notes: <optional — supersession reasons, decisions made, why the plan changed>
 ```
 
-### Task journal commit body
+### Task journal commit body — example
 
-Every commit the director creates — whether it carries code or is `--allow-empty` — has a journal entry in its body:
+Every commit director creates — whether it carries code or is `--allow-empty` — has a journal entry in its body:
 
 ```
 <subject line per project conventions>
@@ -92,7 +92,7 @@ Notes: Excluded /api/auth/login and /api/auth/refresh from the middleware chain.
 
 ## Git behaviour
 
-**Subagents never make git commits — the director owns all git operations.** Git conventions come from whatever `.claude/rules/*.md` file the project's Rules index points at for commits (typically `.claude/rules/git.md`); the director reads it on demand before its first commit of the session. If no such rule is indexed, it falls back to conventional commits.
+**Subagents never make git commits — the director owns all git operations.** Git conventions come from whatever `.claude/rules/*.md` file the project's Rules index points at for commits (typically `.claude/rules/git.md`); the director reads it on demand before its first commit of the session. If no such rule is indexed, it falls back to conventional commits. Body templates for `plan:` and `Task:` journal entries are defined in the `plan-management` skill — the table below covers only the subject line per shape.
 
 The director uses three commit shapes:
 
