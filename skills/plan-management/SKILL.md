@@ -3,7 +3,7 @@ name: plan-management
 description: Read, parse, and (for director only) write the project plan and per-task outcomes that the director stores in git history. Use when you need to know the current plan, derive task status, find a prior task's outcome, or compose a `plan:` or `Task:` journal commit body. Triggers on "current plan", "task status", "what's been done", "plan commit", "task journal", "is this task in progress".
 ---
 
-The project plan and task journal live entirely in **git commit history** — there is no `plan.md` or `tasks.json`. Every agent in a director-managed project reads plan state by querying `git log`. This skill is the canonical spec for that format and the read/write commands; agents and humans should treat it as the single source of truth.
+The project plan and task journal live entirely in **git commit history**. Every agent in a director-managed project reads plan state by querying `git log`. This skill is the canonical spec for that format and the read/write commands; agents and humans should treat it as the single source of truth.
 
 ## Who writes / who reads
 
