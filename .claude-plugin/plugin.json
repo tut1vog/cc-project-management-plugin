@@ -1,6 +1,6 @@
 {
   "name": "cc-project-management-plugin",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Three orchestration subagents for Claude Code (initializer, advisor, director) that discover intent, audit existing code, and autonomously drive execution — bundled with the skillex-mcp server for fuzzy skill discovery.",
   "author": {
     "name": "tut1vog"
