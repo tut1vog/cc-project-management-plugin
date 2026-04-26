@@ -37,7 +37,7 @@ Introduce features one at a time when they fit what the user describes. Ask "Are
 ### What to read
 
 1. **Project identity**: `README.md`, then the first matching manifest: `package.json`, `pyproject.toml`, `Cargo.toml`, `go.mod`, `pom.xml`, `build.gradle`. Extract: name, language/runtime, stated purpose, version.
-2. **Claude Code presence**: Check for `CLAUDE.md`, `CLAUDE.local.md`, `.claude/rules/`, `.claude/commands/`, `.claude/agents/`, `.claude/settings.json`. Read each that exists in full and note what it covers and what it lacks — Scaffold overwrites these files, so capture the user's existing intent now.
+2. **Claude Code presence**: Check for `CLAUDE.md`, `CLAUDE.local.md`, `.claude/rules/`, `.claude/commands/`, `.claude/agents/`, `.claude/settings.json`, `.claude/settings.local.json`. Read each that exists in full and note what it covers and what it lacks — Scaffold overwrites these files, so capture the user's existing intent now.
 3. **Documentation state**: Check for `docs/`, `LICENSE`, and any other documentation files. Note which exist and whether they appear current.
 4. **Coding conventions**: Look for linting/formatting configs: `.eslintrc*`, `.prettierrc*`, `pyproject.toml [tool.ruff]`/`[tool.black]`, `.flake8`, `rustfmt.toml`, `.golangci.yml`, etc.
 5. **Git workflow signals**: Check `.github/workflows/`, `.github/PULL_REQUEST_TEMPLATE*`, `.github/CODEOWNERS`, `.gitlab-ci.yml`, `Makefile` targets related to CI.
@@ -64,6 +64,7 @@ After reading, present this summary to the user before asking any questions:
 | .claude/commands/ | exists (N files) / missing | |
 | .claude/agents/ | exists (N files) / missing | |
 | .claude/settings.json | exists / missing | |
+| .claude/settings.local.json | exists / missing | gitignored per-developer overrides |
 
 ### Conventions
 | Area | Status |
@@ -121,6 +122,8 @@ Before finalising the Phase 6 proposal, consult skillex to see whether any pre-b
 
 Any operation not listed here requires user confirmation at runtime.
 
+Permissions are written to `.claude/settings.local.json` (gitignored, per-developer); confirm with the user before writing them to `.claude/settings.json` instead.
+
 Once all seven phases are complete, produce this summary and wait for explicit approval before proceeding to Handoff:
 
 ```
@@ -145,7 +148,7 @@ Once all seven phases are complete, produce this summary and wait for explicit a
     - `.claude/rules/<file>.md` — trigger: "<when an agent should read this>" — <create | overwrite>
     - <repeat for each>
   - Skills (from skillex): <accepted skill ids with a one-line headline each — or "none">
-  - `.claude/settings.json`: permissions derived from the Phase 7 table below — <create | overwrite>
+  - `.claude/settings.local.json`: permissions derived from the Phase 7 table below — <create | overwrite>
   - Commands / Agents / MCP / hooks: <planned or "none">
 
 **Director permissions**: <paste the filled-in Phase 7 Director Permissions table here>
@@ -159,7 +162,7 @@ Approve this summary to proceed to handoff, or correct anything above.
 
 Activated once the user approves the Requirements Summary. Scaffold produces the durable project structure director relies on; there is no separate Handoff write step.
 
-**Overwrite policy**: Overwrite `CLAUDE.md`, `CLAUDE.local.md`, every approved `.claude/rules/*.md`, and `.claude/settings.json` without prompting and without `.bak` files. The Git bootstrap step below is what makes this safe — users recover prior content via `git diff` / `git checkout` (note: `CLAUDE.local.md` is gitignored, so its history lives only in the working tree).
+**Overwrite policy**: Overwrite `CLAUDE.md`, `CLAUDE.local.md`, every approved `.claude/rules/*.md`, and `.claude/settings.local.json` without prompting and without `.bak` files. The Git bootstrap step below is what makes this safe — users recover prior content via `git diff` / `git checkout` (note: `CLAUDE.local.md` and `.claude/settings.local.json` are gitignored, so their history lives only in the working tree).
 
 ### Step 1 — Ensure a git repository exists
 
@@ -229,7 +232,7 @@ For current goal, scope, director permissions, and known unknowns, see `CLAUDE.l
 **Planned**: <what's still to be done>
 
 ## Director Permissions
-<Filled-in Phase 7 Director Permissions table verbatim. Same permissions are encoded in `.claude/settings.json` for machine enforcement; this is the human-readable copy director consults while planning.>
+<Filled-in Phase 7 Director Permissions table verbatim. Same permissions are encoded in `.claude/settings.local.json` for machine enforcement; this is the human-readable copy director consults while planning.>
 
 ## Known Unknowns
 <Open questions that may affect planning.>
@@ -256,9 +259,9 @@ Minimum structure per rule file:
 
 Do not manufacture rules the user did not specify. Pull concrete content from what the audit found (existing linter configs, CI workflow commands, commit history patterns) and what Discovery confirmed. Generic fluff ("write clear code") does not belong in rules.
 
-### Step 4 — Write `.claude/settings.json`
+### Step 4 — Write the permissions file
 
-Translate the Phase 7 Director Permissions table into Claude Code's `settings.json` schema. Write the file at `.claude/settings.json`, overwriting any existing version. Use this subset of the schema:
+Translate the Phase 7 Director Permissions table into Claude Code's settings schema. Write to `.claude/settings.local.json` (gitignored, per-developer); use `.claude/settings.json` only if the user opted for committed permissions in Phase 7. Overwrite any existing file at the chosen path. Use this subset of the schema:
 
 ```json
 {
@@ -285,7 +288,7 @@ Translate each Phase 7 row into settings.json entries:
 
 Set `defaultMode` to `"acceptEdits"` unless the user asked for stricter oversight.
 
-The file must be valid JSON. After writing, verify with `python -m json.tool .claude/settings.json` (or `jq . .claude/settings.json`) and fix any error before continuing.
+The file must be valid JSON. After writing, verify with `python -m json.tool .claude/settings.local.json` (or `jq .`) and fix any error before continuing.
 
 ### Step 5 — Summarise what was written
 
@@ -298,10 +301,10 @@ Written / overwritten:
 - CLAUDE.local.md
 - .claude/rules/git.md
 - .claude/rules/testing.md
-- .claude/settings.json
+- .claude/settings.local.json
 
 Verify with: git status && git diff --stat
-Any of these can be inspected or reverted with standard git commands (note: `CLAUDE.local.md` is gitignored and won't appear in `git diff`).
+Any of these can be inspected or reverted with standard git commands (note: `CLAUDE.local.md` and `.claude/settings.local.json` are gitignored and won't appear in `git diff`).
 ```
 
 ---
@@ -314,6 +317,6 @@ Scaffold is complete. Tell the user what landed in their project:
 > - `CLAUDE.md` (long-term project rules, auto-loaded by Claude Code)
 > - `CLAUDE.local.md` (current goal — auto-loaded by Claude Code; gitignored via `*.local.*`)
 > - `.claude/rules/*.md` (behavioral rules, loaded on demand)
-> - `.claude/settings.json` (director permissions)
+> - `.claude/settings.local.json` (director permissions; gitignored per-developer)
 >
 > You can now invoke `director` to plan and execute the work in scope.

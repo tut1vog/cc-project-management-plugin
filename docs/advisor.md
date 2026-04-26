@@ -11,7 +11,7 @@ A senior Claude Code specialist agent that audits an existing project, recommend
 - Consults the bundled `skillex` MCP server during Phase 6 to surface pre-built skills (from the audit findings and Discovery answers) as candidate features
 - Runs `git init` (if needed) and halts on a dirty tree before touching any files
 - Adds `*.local.*` to `.gitignore` so `CLAUDE.local.md` (and any other `*.local.*` Claude Code conventions) stays out of git
-- Overwrites `CLAUDE.md`, `CLAUDE.local.md`, `.claude/rules/*.md`, and `.claude/settings.json` with refreshed versions (git is the audit trail for the tracked files — no backup files, no diff prompts)
+- Overwrites `CLAUDE.md`, `CLAUDE.local.md`, `.claude/rules/*.md`, and `.claude/settings.local.json` (director permissions; gitignored per-developer, or `.claude/settings.json` if you want them committed) with refreshed versions (git is the audit trail for the tracked files — no backup files, no diff prompts)
 
 ## Usage
 
@@ -29,7 +29,7 @@ The advisor will:
 3. Walk through targeted discovery (only asking about gaps)
 4. Produce a Requirements Summary for your approval
 5. Ensure git is initialized and the working tree is clean (halt if not), and add `*.local.*` to `.gitignore`
-6. Write / overwrite `CLAUDE.md`, `CLAUDE.local.md`, `.claude/rules/*.md`, and `.claude/settings.json`
+6. Write / overwrite `CLAUDE.md`, `CLAUDE.local.md`, `.claude/rules/*.md`, and `.claude/settings.local.json`
 
 ### After the advisor finishes
 
@@ -46,7 +46,7 @@ The advisor reads these areas silently before asking anything:
 | Area | What it checks |
 |------|----------------|
 | Project identity | README, manifest files (package.json, pyproject.toml, Cargo.toml, etc.) |
-| Claude Code presence | CLAUDE.md, CLAUDE.local.md, .claude/rules/, .claude/commands/, .claude/agents/, .claude/settings.json |
+| Claude Code presence | CLAUDE.md, CLAUDE.local.md, .claude/rules/, .claude/commands/, .claude/agents/, .claude/settings.json, .claude/settings.local.json |
 | Documentation state | docs/, LICENSE, and any other documentation files |
 | Coding conventions | Linting/formatting configs (.eslintrc, .prettierrc, pyproject.toml, rustfmt.toml, etc.) |
 | Git workflow | .github/workflows/, PR templates, CODEOWNERS, Makefile CI targets |

@@ -68,6 +68,8 @@ Before finalising the Phase 6 proposal, consult skillex to see whether any pre-b
 
 Any operation not listed here requires user confirmation at runtime.
 
+Permissions are written to `.claude/settings.local.json` (gitignored, per-developer); confirm with the user before writing them to `.claude/settings.json` instead.
+
 Once all seven phases are complete, produce a Requirements Summary and wait for explicit approval before proceeding to Handoff:
 
 ```
@@ -92,7 +94,7 @@ Once all seven phases are complete, produce a Requirements Summary and wait for 
     - `.claude/rules/<file>.md` — trigger: "<when an agent should read this>"
     - <repeat for each>
   - Skills (from skillex): <accepted skill ids with a one-line headline each — or "none">
-  - `.claude/settings.json`: permissions derived from the Phase 7 table below
+  - `.claude/settings.local.json`: permissions derived from the Phase 7 table below
   - Commands / Agents / MCP / hooks: <planned or "none">
 
 **Director permissions**: <paste the filled-in Phase 7 Director Permissions table here>
@@ -171,7 +173,7 @@ For current goal, scope, director permissions, and known unknowns, see `CLAUDE.l
 **Deferred**: <what's out>
 
 ## Director Permissions
-<Filled-in Phase 7 Director Permissions table verbatim. Same permissions are encoded in `.claude/settings.json` for machine enforcement; this is the human-readable copy director consults while planning.>
+<Filled-in Phase 7 Director Permissions table verbatim. Same permissions are encoded in `.claude/settings.local.json` for machine enforcement; this is the human-readable copy director consults while planning.>
 
 ## Known Unknowns
 <Open questions that may affect planning.>
@@ -198,9 +200,9 @@ Minimum structure per rule file:
 
 Do not manufacture rules the user did not specify. If Phase 5 produced "commits follow conventional commits", write that and nothing more. Generic fluff ("write clear code") does not belong in rules.
 
-### Step 4 — Write `.claude/settings.json`
+### Step 4 — Write the permissions file
 
-Translate the Phase 7 Director Permissions table into Claude Code's `settings.json` schema. Write the file at `.claude/settings.json`. Use this subset of the schema:
+Translate the Phase 7 Director Permissions table into Claude Code's settings schema. Write to `.claude/settings.local.json` (gitignored, per-developer); use `.claude/settings.json` only if the user opted for committed permissions in Phase 7. Use this subset of the schema:
 
 ```json
 {
@@ -227,7 +229,7 @@ Translate each Phase 7 row into settings.json entries:
 
 Set `defaultMode` to `"acceptEdits"` unless the user asked for stricter oversight.
 
-The file must be valid JSON. After writing, verify with `python -m json.tool .claude/settings.json` (or `jq . .claude/settings.json`) and fix any error before continuing.
+The file must be valid JSON. After writing, verify with `python -m json.tool .claude/settings.local.json` (or `jq .`) and fix any error before continuing.
 
 ### Step 5 — Summarise what was written
 
@@ -240,7 +242,7 @@ Written:
 - CLAUDE.local.md
 - .claude/rules/git.md
 - .claude/rules/testing.md
-- .claude/settings.json
+- .claude/settings.local.json
 
 Verify with: git status && git diff --stat
 ```
@@ -255,6 +257,6 @@ Scaffold is complete. Tell the user what landed in their project:
 > - `CLAUDE.md` (long-term project rules, auto-loaded by Claude Code)
 > - `CLAUDE.local.md` (current goal — auto-loaded by Claude Code; gitignored via `*.local.*`)
 > - `.claude/rules/*.md` (behavioral rules, loaded on demand)
-> - `.claude/settings.json` (director permissions)
+> - `.claude/settings.local.json` (director permissions; gitignored per-developer)
 >
 > You can now invoke `director` to plan and execute the work in scope.

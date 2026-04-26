@@ -11,7 +11,7 @@ A senior Claude Code specialist agent that helps you think through a new project
 - Consults the bundled `skillex` MCP server during Phase 6 to surface pre-built skills from an external catalog (default: `anthropics/skills`) as candidate features
 - Runs `git init` (if needed) and halts on a dirty tree so every scaffold write is cleanly diffable
 - Adds `*.local.*` to `.gitignore` so `CLAUDE.local.md` (and any other `*.local.*` Claude Code conventions) stays out of git
-- Writes the project scaffolding: `CLAUDE.md` (long-term project facts, auto-loaded), `CLAUDE.local.md` (current goal — auto-loaded; gitignored), `.claude/rules/*.md`, and `.claude/settings.json`
+- Writes the project scaffolding: `CLAUDE.md` (long-term project facts, auto-loaded), `CLAUDE.local.md` (current goal — auto-loaded; gitignored), `.claude/rules/*.md`, and `.claude/settings.local.json` (director permissions; gitignored per-developer, or `.claude/settings.json` if you want them committed)
 
 ## Usage
 
@@ -23,7 +23,7 @@ Invoke the initializer by name in Claude Code. It always runs Discovery first �
 Use initializer to set up this project
 ```
 
-The initializer will walk you through seven phases of discovery, then — after you approve the Requirements Summary — write the scaffolding (`CLAUDE.md`, `CLAUDE.local.md`, `.claude/rules/*.md`, `.claude/settings.json`).
+The initializer will walk you through seven phases of discovery, then — after you approve the Requirements Summary — write the scaffolding (`CLAUDE.md`, `CLAUDE.local.md`, `.claude/rules/*.md`, `.claude/settings.local.json`).
 
 ### After the initializer finishes
 
@@ -49,7 +49,7 @@ The initializer asks one phase at a time, summarizing and confirming before movi
 
 ### Requirements Summary
 
-After all seven phases, the initializer produces a summary covering: project name/users/problem, constraints, MVP/deferred scope, stack, deployment, testing, team workflow, license, known unknowns, the concrete Claude Code setup it will write in Scaffold (`CLAUDE.md` sections, `CLAUDE.local.md` sections, each `.claude/rules/*.md` file and its trigger sentence, `.claude/settings.json` permission derivation), and the filled-in Phase 7 Director Permissions table (Bash allow/deny, file creation, protected paths, git commits, network access, package management, always-confirm operations).
+After all seven phases, the initializer produces a summary covering: project name/users/problem, constraints, MVP/deferred scope, stack, deployment, testing, team workflow, license, known unknowns, the concrete Claude Code setup it will write in Scaffold (`CLAUDE.md` sections, `CLAUDE.local.md` sections, each `.claude/rules/*.md` file and its trigger sentence, `.claude/settings.local.json` permission derivation), and the filled-in Phase 7 Director Permissions table (Bash allow/deny, file creation, protected paths, git commits, network access, package management, always-confirm operations).
 
 Nothing is written until you approve this summary.
 
@@ -60,7 +60,7 @@ Once approved, the initializer:
 1. Ensures a git repo exists (`git init` if needed) and halts on a dirty tree to ask about commit/stash/abort. Adds `*.local.*` to `.gitignore` so the `CLAUDE.local.md` written next stays untracked.
 2. Writes `CLAUDE.md` at the project root (stack, directory layout, canonical commands, constraints, and a Rules index listing each `.claude/rules/*.md` file with a one-line trigger — rules are loaded on demand, not auto-imported) and `CLAUDE.local.md` (project overview, scope, director permissions, known unknowns) — both auto-loaded by Claude Code at session start.
 3. Writes each `.claude/rules/*.md` file from the approved list, each with a focused "when to read this" trigger and project-specific content.
-4. Writes `.claude/settings.json` translating the Phase 7 permissions into `permissions.allow` / `permissions.deny` / `defaultMode`.
+4. Writes `.claude/settings.local.json` translating the Phase 7 permissions into `permissions.allow` / `permissions.deny` / `defaultMode`.
 
 There is no separate handoff write — `CLAUDE.local.md` is the planning input director consults, and Claude Code auto-loads it whenever director runs.
 
