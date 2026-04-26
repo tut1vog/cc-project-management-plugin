@@ -26,8 +26,7 @@ A Claude Code plugin bundling three orchestration subagents (`initializer`, `adv
 ├── docs/                   # human-facing per-agent documentation
 ├── CLAUDE.md               # this file
 ├── README.md               # consumer-facing install + usage guide
-├── LICENSE                 # MIT
-└── project-brief.md        # planning input for director
+└── LICENSE                 # MIT
 ```
 
 Note: `agents/` and `skills/` both live at the **plugin root**, not under `.claude/agents/` or `.claude/skills/`. Those nested locations are how consumers see them after installation — the plugin spec requires them at the root, and `.claude-plugin/` holds only `plugin.json` + `marketplace.json`.
@@ -50,9 +49,10 @@ Each rule file below is a focused behavioral contract. Read a rule file when its
 - `.claude/rules/releasing.md` — read before bumping the plugin version or cutting a release
 - `.claude/rules/agent-authoring.md` — read before creating or editing any file under `agents/` or `skills/`
 - `.claude/rules/mcp-config.md` — read before editing `.mcp.json` or changing MCP server configuration
+- `.claude/rules/no-legacy.md` — read before editing any prose (agent prompts, skill prompts, rules, docs, READMEs)
 
 ## Skills (bundled)
 - `skills/plan-management/SKILL.md` — canonical format spec and read/write commands for the `plan:` and `Task:` journal commit messages director uses to store plan state in git history. Read it before editing director's plan/journal behavior or any agent that needs to inspect plan state.
 
-## Planning Context
-For current intent, scope, and how director should operate on this repo, see `project-brief.md`. Director permissions are managed locally by the maintainer in `.claude/settings.local.json` (gitignored) — there is no committed `.claude/settings.json`.
+## Permissions
+Director's permissions for this repo live in the maintainer's local `.claude/settings.local.json` (gitignored).
