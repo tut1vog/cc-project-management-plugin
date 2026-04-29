@@ -1,22 +1,22 @@
 # advisor
 
-A senior Claude Code specialist agent that sets up Claude Code for a project or establishes the current goal — audits any prior code, runs structured discovery, then writes the project scaffolding so director can plan and execute.
+A senior Claude Code specialist agent that sets up Claude Code for a project or establishes the current goal — reads any prior code, runs structured discovery, then writes the project scaffolding so director can plan and execute.
 
 ## What it does
 
-- Silently reads the entire project before asking a single question (Audit) — an empty directory just produces a short audit summary
+- Silently reads the entire project before asking a single question (Phase 0) — an empty directory just produces a short project summary
 - Surfaces gaps in Claude Code setup, conventions, and dependency health when prior state exists
 - Validates tech choices and dependency maintenance status via WebSearch
-- Walks through structured discovery — leading with audit findings when prior state exists, asking open-ended when it does not
+- Walks through structured discovery — leading with what was read when prior state exists, asking open-ended when it does not
 - Captures the current project goal in Phase 2 (Scope) — this is what director will work toward
-- Consults the bundled `skillex` MCP server during Phase 6 to surface pre-built skills (from the audit findings and Discovery answers) as candidate features
+- Consults the bundled `skillex` MCP server during Phase 6 to surface pre-built skills (from Phase 0 findings and Discovery answers) as candidate features
 - Runs `git init` (if needed) and halts on a dirty tree before touching any files
 - Adds `*.local.*` to `.gitignore` so `CLAUDE.local.md` (and any other `*.local.*` Claude Code conventions) stays out of git
 - Writes (or overwrites) `CLAUDE.md`, `CLAUDE.local.md`, `.claude/rules/*.md`, and `.claude/settings.local.json` (director permissions; gitignored per-developer, or `.claude/settings.json` if you want them committed) — git is the audit trail for the tracked files, no backup files, no diff prompts
 
 ## Usage
 
-Invoke the advisor by name in Claude Code. It always runs a silent audit first — reading whatever project files exist before presenting findings.
+Invoke the advisor by name in Claude Code. It always reads the project silently first — reading whatever project files exist before presenting findings.
 
 ### Set up a new project
 
@@ -24,7 +24,7 @@ Invoke the advisor by name in Claude Code. It always runs a silent audit first �
 Use advisor to set up this project
 ```
 
-### Audit and improve an existing project
+### Review and improve an existing project
 
 ```
 Use advisor to review this project's Claude Code setup
@@ -38,7 +38,7 @@ Use advisor to set a new goal for this project
 
 In all three cases, advisor will:
 1. Silently read your project (manifests, README, existing Claude Code files, configs, CI, source structure) — fast and short on an empty directory
-2. Present an Audit Summary
+2. Present a Project Summary
 3. Walk through the seven discovery phases — confirming what it observed when prior state exists, asking open-ended when it does not
 4. Produce a Requirements Summary for your approval
 5. Ensure git is initialized and the working tree is clean (halt if not), and add `*.local.*` to `.gitignore`
@@ -52,7 +52,7 @@ Once scaffolding is written, invoke director to plan and execute the work. `CLAU
 Use director to plan and execute the work
 ```
 
-## Audit Summary
+## Project Summary
 
 The advisor reads these areas silently before asking anything:
 
@@ -68,27 +68,27 @@ The advisor reads these areas silently before asking anything:
 
 ## Discovery phases
 
-Seven phases, asked one at a time. When the audit found prior state, each phase leads with what was observed; when it found nothing, each phase is asked open-ended.
+Seven phases, asked one at a time. When Phase 0 found prior state, each phase leads with what was observed; when it found nothing, each phase is asked open-ended.
 
 | Phase | What it covers |
 |-------|----------------|
-| 1. Problem space | One-sentence description, users, problem solved — confirms audit-derived understanding when prior state exists |
+| 1. Problem space | One-sentence description, users, problem solved — confirms Phase 0 understanding when prior state exists |
 | 2. Scope and constraints | Captures the current goal: stable + planned for projects with prior state, MVP + deferred for greenfield; plus hard constraints not visible in code |
-| 3. Technical direction | Validates audit-detected stack via WebSearch, or asks for the chosen language/runtime, dependencies, deployment, and testing strategy and validates the choices |
+| 3. Technical direction | Validates the Phase 0-detected stack via WebSearch, or asks for the chosen language/runtime, dependencies, deployment, and testing strategy and validates the choices |
 | 4. Collaboration | Team size, branching workflow, long-term ownership |
 | 5. Standards | Linting/formatting, CI enforcement, naming and commit conventions, license |
-| 6. Claude Code setup | Proposes features that fit, based on audit findings and discovery answers — plus pre-built skills surfaced by consulting the bundled `skillex` MCP server against those findings |
+| 6. Claude Code setup | Proposes features that fit, based on Phase 0 findings and discovery answers — plus pre-built skills surfaced by consulting the bundled `skillex` MCP server against those findings |
 | 7. Director permissions | Establishes what the director and subagents may do autonomously (bash commands, file ops, git, network, packages, destructive operations) |
 
 ## When to use this vs. other agents
 
 | Situation | Agent |
 |-----------|-------|
-| **Project setup, audit, or goal change** | advisor -> director |
+| **Project setup, review, or goal change** | advisor -> director |
 | **Multi-step implementation work** | director |
 
 ## Tips
 
-- **Let the audit run.** The advisor reads everything silently first — this means fewer questions and more targeted advice on a project that has prior state.
+- **Let Phase 0 run.** The advisor reads everything silently first — this means fewer questions and more targeted advice on a project that has prior state.
 - **Be specific about scope.** The Scope you confirm in Phase 2 is the current goal director will work toward, so it pays to be precise about what's in versus out.
 - **You can say no.** The advisor proposes Claude Code features but doesn't force them. Decline anything that doesn't fit.
