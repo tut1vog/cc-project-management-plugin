@@ -3,7 +3,7 @@
 **When to read this**: read before making any commit or tag.
 
 ## Rules
-- Use [Conventional Commits](https://www.conventionalcommits.org/): `<type>(<scope>)?: <subject>`. Types in use here: `feat`, `fix`, `chore`, `docs`, `refactor`, `test`, `build`, `ci`, plus director-only `plan`. The `chore(ai):` scope is reserved for director's task-journal bookkeeping commits (failures, supersessions, no-op events). The `plan:` type is reserved for director's empty plan-definition commits — its body is the full phases/tasks decomposition; see `skills/plan-management/SKILL.md` for the canonical body schema and read/write commands.
+- Use [Conventional Commits](https://www.conventionalcommits.org/): `<type>(<scope>)?: <subject>`. Types in use here: `feat`, `fix`, `chore`, `docs`, `refactor`, `test`, `build`, `ci`, plus director-only `plan`. The `chore(ai):` scope is reserved for director's task-journal bookkeeping commits (failures, supersessions, no-op events). The `plan:` type is reserved for director's empty plan-definition commits — see `skills/plan-management/SKILL.md` for the body schemas and read/write commands.
 - Keep subject lines ≤72 chars, imperative mood, lowercase after the colon.
 - Explain the **why** in the body when the change isn't self-evident. The "what" is the diff.
 - Never `--amend` or force-push without explicit user approval. If a pre-commit hook fails, fix the cause and create a new commit — don't `--amend` over it.
@@ -26,20 +26,6 @@ docs: rewrite README install section for /plugin install workflow
 ```
 ```
 chore(ai): record task 3.2 — agent-authoring rule verified
-```
-```
-plan: initialise plan for replacing plan.md with plan: commits
-
-Goal: move director's plan from a tracked file into git history.
-
-## Phase 1: Director rewrite
-> Update director.md to read/write plans via `plan:` commits.
-- 1.1 rewrite director.md plan-storage section
-- 1.2 update advisor to reference plan: commits
-
-## Phase 2: Verify end-to-end
-> Confirm plugin loads and director can plan against the new model.
-- 2.1 run claude --plugin-dir ./ and inspect /agents
 ```
 
 Bad commits:

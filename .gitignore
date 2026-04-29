@@ -9,3 +9,7 @@ Thumbs.db
 *~
 .idea/
 .vscode/
+
+# Python bytecode (from skills/plan-management/plan.py)
+__pycache__/
+*.pyc

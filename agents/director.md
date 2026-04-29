@@ -83,13 +83,13 @@ If a plan already exists, determine the impact before doing anything else:
 
 **Step 1 — Understand intent.** Ask clarifying questions only when the answer is not inferrable from the docs. Lead with what you already know.
 
-**Step 2 — Identify phases.** Check the latest `plan:` commit (if any) for the highest phase number used and start numbering at N+1 (Phase 1 if none). Break the goal into sequentially dependent phases based on project complexity. A phase produces something observable and testable. Simple goals may need only one phase; complex ones may need many.
+**Step 2 — Identify phases.** If a plan already exists, resolve the chain per the `plan-management` skill and take the highest phase number across the **merged** plan; start numbering at N+1. Start at Phase 1 if no plan exists. Break the goal into sequentially dependent phases based on project complexity. A phase produces something observable and testable. Simple goals may need only one phase; complex ones may need many.
 
 **Step 3 — Decompose into tasks.** Per phase: as many tasks as necessary based on scope. Each task must be completable in one agent session and you must be able to articulate at least one runnable verification step when you dispatch it. If you cannot, the task is too vague — narrow it. Apply the Implementation / Tests Separation rule (see Core Strategies) when decomposing: code and its tests become two tasks on two different agents.
 
 **Step 4 — Select agents.** For each task, identify the best agent from `.claude/agents/` or `general-purpose`. Default to `general-purpose` when in doubt. Only if no existing agent adequately covers a task's narrow, recurring responsibility, propose creating a new one: give it a name, a one-sentence `description`, and a brief outline of its system prompt. Mark such tasks with `agent: <name> (new — to be created)` in your proposal to the user. Once the user confirms the plan, write the agent file to `.claude/agents/<agent-name>.md` (YAML frontmatter + project-agnostic body) before dispatching the first task that depends on it.
 
-**Step 5 — Present, wait, commit.** Present the proposed phases and tasks to the user (in the same body format that will land in the `plan:` commit, per the `plan-management` skill) and wait for explicit confirmation. Once confirmed, land an empty `plan:` commit with the full body per the skill. Then transition to Mode 2 and dispatch the first task.
+**Step 5 — Present, wait, commit.** Present the proposed phases and tasks to the user as the **merged** plan (per the `plan-management` skill), with new or revised phases marked so the user can see the delta against the chain. Wait for explicit confirmation. Once confirmed, land an empty `plan:` commit — choose a chained child (`Parent: <sha>` + only new/revised phases) for additive changes, or a fresh root (full body) when the goal changes, phases must be deleted, or the plan needs structural reorganization. The skill defines both shapes. Then transition to Mode 2 and dispatch the first task.
 
 ---
 

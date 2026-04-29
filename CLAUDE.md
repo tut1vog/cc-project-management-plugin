@@ -3,8 +3,8 @@
 A Claude Code plugin bundling two orchestration subagents (`advisor`, `director`), the `plan-management` skill, and the `skillex-mcp` server — distributed as a single-plugin marketplace so users can install it globally with `/plugin install` instead of copying `.md` files into every project.
 
 ## Stack
-- Language / runtime: **none at build time** — the repo is Markdown (agent definitions, rules, docs) and JSON (plugin manifests, MCP config).
-- Runtime dependency on consumer machines: **Node ≥ 20** (required by `skillex-mcp`, launched via `npx -y github:tut1vog/skillex-mcp`).
+- Language / runtime: **none at build time** — the repo is Markdown (agent definitions, rules, docs), JSON (plugin manifests, MCP config), and one stdlib-only Python helper (`bin/plan-management`).
+- Runtime dependencies on consumer machines: **Node ≥ 20** (required by `skillex-mcp`, launched via `npx -y github:tut1vog/skillex-mcp`) and **Python 3** (required by the `plan-management` helper command).
 - No compile step, no test suite, no dependency lockfiles.
 
 ## Directory Layout
@@ -19,6 +19,8 @@ A Claude Code plugin bundling two orchestration subagents (`advisor`, `director`
 ├── skills/                 # bundled skills — one dir per skill (plugin spec location)
 │   └── plan-management/
 │       └── SKILL.md
+├── bin/                    # executables added to the Bash tool's PATH while the plugin is enabled
+│   └── plan-management     # stdlib Python: walks plan: chains, prints merged plan
 ├── .mcp.json               # skillex-mcp wiring (default SKILLS_MCP_REPOS=anthropics/skills)
 ├── .claude/
 │   └── rules/              # behavioral rules for working on THIS repo, loaded on demand

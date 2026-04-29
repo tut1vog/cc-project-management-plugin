@@ -1,0 +1,162 @@
+#!/usr/bin/env python3
+"""Read-side helper for the plan-management skill.
+
+Walks the chain of `plan:` commits in the current git repository's history,
+merges their bodies per the skill spec, and prints the result to stdout.
+
+Run from inside any git repository. Requires only the Python stdlib and `git`.
+Shipped on PATH by the cc-project-management-plugin as `plan-management`.
+
+Usage:
+  plan-management current   # merged plan body (Goal + phase blocks, sorted by N)
+  plan-management root      # chain root SHA (use for the task-status window)
+  plan-management leaf      # chain leaf SHA (most recent plan: commit)
+  plan-management chain     # every chain commit SHA, one per line, root -> leaf
+
+Exit code 2 if no `plan:` commit exists in history.
+"""
+
+from __future__ import annotations
+
+import re
+import subprocess
+import sys
+from collections import OrderedDict
+
+
+def git(*args: str) -> str:
+    return subprocess.run(
+        ["git", *args], capture_output=True, check=True, text=True
+    ).stdout
+
+
+def latest_plan_sha() -> str | None:
+    sha = git("log", "-n", "1", "--grep=^plan:", "--format=%H").strip()
+    return sha or None
+
+
+def commit_body(sha: str) -> str:
+    return git("show", sha, "-s", "--format=%b")
+
+
+PARENT_RE = re.compile(r"^Parent:\s+([0-9a-fA-F]{4,40})\s*$")
+PHASE_RE = re.compile(r"^##\s+Phase\s+(\d+)\s*:", re.IGNORECASE)
+GOAL_RE = re.compile(r"^Goal:\s*\S")
+NOTES_RE = re.compile(r"^Notes:\s*", re.IGNORECASE)
+
+
+def parent_of(sha: str) -> str | None:
+    for line in commit_body(sha).splitlines():
+        if not line.strip():
+            continue
+        m = PARENT_RE.match(line)
+        return m.group(1) if m else None
+    return None
+
+
+def walk_chain(leaf: str) -> list[str]:
+    """Return chain SHAs in root -> leaf order."""
+    chain: list[str] = []
+    seen: set[str] = set()
+    cur: str | None = leaf
+    while cur:
+        if cur in seen:
+            sys.exit(f"plan-management: cycle detected in plan: chain at {cur}")
+        seen.add(cur)
+        chain.insert(0, cur)
+        cur = parent_of(cur)
+    return chain
+
+
+def parse_body(body: str) -> tuple[str | None, "OrderedDict[int, str]"]:
+    """Extract Goal: line and ## Phase N: blocks from one commit body."""
+    goal: str | None = None
+    phases: "OrderedDict[int, str]" = OrderedDict()
+    lines = body.splitlines()
+    i, n = 0, len(lines)
+    while i < n:
+        line = lines[i]
+        if goal is None and GOAL_RE.match(line):
+            goal = line.rstrip()
+        m = PHASE_RE.match(line)
+        if m:
+            phase_num = int(m.group(1))
+            block = [line.rstrip()]
+            i += 1
+            while i < n:
+                nxt = lines[i]
+                if PHASE_RE.match(nxt) or NOTES_RE.match(nxt):
+                    break
+                block.append(nxt.rstrip())
+                i += 1
+            while block and not block[-1].strip():
+                block.pop()
+            phases[phase_num] = "\n".join(block)
+            continue
+        i += 1
+    return goal, phases
+
+
+def merge_chain(chain: list[str]) -> tuple[str | None, "OrderedDict[int, str]"]:
+    goal: str | None = None
+    merged: "OrderedDict[int, str]" = OrderedDict()
+    for sha in chain:
+        g, phases = parse_body(commit_body(sha))
+        if goal is None and g is not None:
+            goal = g
+        for num, block in phases.items():
+            merged[num] = block
+    ordered: "OrderedDict[int, str]" = OrderedDict()
+    for num in sorted(merged.keys()):
+        ordered[num] = merged[num]
+    return goal, ordered
+
+
+def require_leaf() -> str:
+    leaf = latest_plan_sha()
+    if not leaf:
+        print("plan-management: no plan: commit found in history", file=sys.stderr)
+        sys.exit(2)
+    return leaf
+
+
+def cmd_current() -> None:
+    chain = walk_chain(require_leaf())
+    goal, phases = merge_chain(chain)
+    if goal:
+        print(goal)
+        print()
+    for num in phases:
+        print(phases[num])
+        print()
+
+
+def cmd_root() -> None:
+    print(walk_chain(require_leaf())[0])
+
+
+def cmd_leaf() -> None:
+    print(require_leaf())
+
+
+def cmd_chain() -> None:
+    for sha in walk_chain(require_leaf()):
+        print(sha)
+
+
+COMMANDS = {
+    "current": cmd_current,
+    "root": cmd_root,
+    "leaf": cmd_leaf,
+    "chain": cmd_chain,
+}
+
+
+def main() -> None:
+    if len(sys.argv) != 2 or sys.argv[1] not in COMMANDS:
+        sys.exit(f"usage: plan-management {{{'|'.join(COMMANDS)}}}")
+    COMMANDS[sys.argv[1]]()
+
+
+if __name__ == "__main__":
+    main()

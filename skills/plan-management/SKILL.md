@@ -8,11 +8,11 @@ The project plan and task journal live entirely in **git commit history**. Every
 ## Who writes / who reads
 
 - **Director writes.** Director is the only agent that lands `plan:` and `Task:` commits. Subagents dispatched by director never commit; they report back and director records the outcome.
-- **Anyone reads.** Any agent — director, a dispatched subagent, an ad-hoc agent in the same project — can run the read commands below to inspect the current plan or task history. Reading does not require any extra tools beyond `Bash`.
+- **Anyone reads.** Any agent — director, a dispatched subagent, an ad-hoc agent in the same project — can run the read commands below to inspect the current plan or task history. Reading needs `Bash`, `git`, and Python 3 for the `plan-management` helper described in **Reading the current plan**.
 
 ## Storage model
 
-- The **current plan** is the body of the most recent commit whose subject begins with `plan:`. An older `plan:` commit is superseded the moment a newer one lands.
+- The **current plan** is anchored at the most recent commit whose subject begins with `plan:` (the chain leaf). It is either that commit's body (a root) or the body merged from the chain it sits on, walked back through `Parent: <sha>` references to a root. A new root (a `plan:` commit with no `Parent:`) supersedes every prior `plan:` commit.
 - **Task outcomes** (passed / failed / superseded) live in the body of every commit director makes after a task event — including code-bearing commits (`feat:`, `fix:`, etc.) and empty bookkeeping commits (`chore(ai):`).
 - Both `plan:` and `chore(ai):` commits are typically `--allow-empty` — they carry no file changes, only the journal in the body.
 
@@ -39,6 +39,35 @@ Notes: <optional — supersession reasons, decisions made, why the plan changed>
 
 Plan bodies are intentionally **lean**: task titles only, no per-task implementation detail. Rich per-task context (files to touch, verification steps, warnings) is composed fresh in the dispatch prompt at execution time and is **never** persisted to the plan body or any other file.
 
+### Root vs chained `plan:` commits
+
+A `plan:` commit is either a **root** (full body, exactly the schema above) or a **child** that chains off a previous `plan:` commit by SHA. A child carries only the new or revised phase blocks; everything else is inherited from the chain.
+
+**Child body**:
+
+```
+Parent: <full-40-char-sha-of-previous-plan-commit>
+
+## Phase N: <new or revised phase>
+> <One-sentence goal>
+- N.x <task title>
+
+Notes: <required — why this revision>
+```
+
+Rules:
+
+- `Parent:` MUST be the first non-empty line of the body. Its presence is the sole signal that the commit is chained.
+- Children omit `Goal:`. The root's goal is authoritative for the whole chain. If the goal itself changes, write a new root (no `Parent:`) and re-state the full plan.
+- A child's `## Phase N:` block with the same N as a phase in the chain **overrides** that phase; a new N **appends**. Phases not mentioned in the child are inherited unchanged.
+- `Notes:` is per-revision and is not merged — readers display each commit's notes alongside the merged plan as a revision history.
+- Phase deletion is not supported in a child. To remove phases, write a new root.
+
+**When to chain vs start a new root**:
+
+- Chain for additive or local changes — appending a phase, revising the tasks of one phase, recording a debugging phase after a failure.
+- Start a new root when the high-level goal changes, when phases must be deleted, or when the plan needs structural reorganization.
+
 ## `Task:` journal commit body
 
 Every commit director creates after a task event carries this block in the body, below the subject and a blank line:
@@ -55,32 +84,43 @@ Notes: <non-obvious context: skipped steps, edge cases>
 
 ## Reading the current plan
 
-```bash
-# 1. Find the latest plan: commit SHA
-git log -n 1 --grep="^plan:" --format=%H
+The chain-walk and merge are encapsulated in the `plan-management` command, shipped on the Bash tool's `PATH` whenever this plugin is enabled. Run it from inside the project's git repository.
 
-# 2. Read its body
-git show <sha> -s --format=%B
+```bash
+# Print the merged plan body (Goal + phase blocks sorted by N)
+plan-management current
+
+# Print the chain root SHA (use it as the lower bound for task-status queries)
+plan-management root
+
+# Print the chain leaf SHA (the most recent plan: commit)
+plan-management leaf
+
+# Print every chain commit SHA, one per line, root → leaf
+plan-management chain
 ```
 
-If no `plan:` commit exists in the history, no plan has been established yet.
+The command exits with code 2 and a stderr message if no `plan:` commit exists in history. A `plan:` commit without `Parent:` is a length-1 chain — root and leaf are the same SHA, and `current` prints that commit's body verbatim.
+
+Merge semantics applied by `current`: walk root → leaf, take `Goal:` from the root, keep a phase dictionary keyed by phase number where a later commit's `## Phase N:` block overrides any earlier block for the same N, emit `Goal:` followed by phase blocks sorted by N ascending. `Notes:` lines are per-revision and are not merged into the body — read individual chain commits with `git show <sha>` when a revision history is needed.
 
 ## Deriving task status
 
-For each task ID listed in the current plan body, walk every task event since the plan commit:
+For each task ID listed in the **merged** plan, walk every task event since the chain root:
 
 ```bash
-# Enumerate every Task: journal entry since the current plan was set
-git log <plan-sha>..HEAD --grep="^Task:" --format="%H%n%B%n----"
+# Enumerate every Task: journal entry since the chain root
+ROOT=$(plan-management root)
+git log "$ROOT"..HEAD --grep="^Task:" --format="%H%n%B%n----"
 ```
 
-Then classify each task ID from the plan body:
+Then classify each task ID from the merged plan:
 
-- **done** — a `Task: N.M` entry with `Outcome: passed` exists since the plan commit.
+- **done** — a `Task: N.M` entry with `Outcome: passed` exists in the window.
 - **in-progress** — the most recent task event for `N.M` is `Outcome: failed` or `Outcome: superseded` and no later passed entry exists. The task was attempted but has not yet been redispatched and passed.
-- **pending** — no task event for `N.M` exists since the plan commit.
+- **pending** — no task event for `N.M` exists in the window.
 
-Task entries before the current `plan:` commit belong to a superseded plan and should be ignored when computing status against the **current** plan, but remain accessible via the queries below for historical lookups.
+Task entries before the current chain's root belong to a superseded plan and should be ignored when computing status against the current plan, but remain accessible via the queries below for historical lookups.
 
 ## Querying task history
 
@@ -109,7 +149,7 @@ Director uses three commit shapes. The shape depends on the task outcome and whe
 |---|---|---|---|---|
 | **Passed task** | Subagent code passed verification | Project-convention subject (`feat:`, `fix:`, `docs:` …) | `Task: N.M` block with `Outcome: passed` | No — bundles subagent code + director's doc updates |
 | **Failed task or single-task supersession** | Verification failed, or a task is superseded by a direction change | `chore(ai): record task N.M failure — <title>` or `chore(ai): supersede task N.M — <reason>` | `Task: N.M` block with `Outcome: failed` or `Outcome: superseded` | Yes — `git commit --allow-empty` |
-| **Plan creation or revision** | New plan, or revision triggered by a failure / direction change | `plan: <summary>` | Full plan body (Goal / Phases / Notes) per the format above | Yes — `git commit --allow-empty` |
+| **Plan creation or revision** | New plan, or revision triggered by a failure / direction change | `plan: <summary>` | Either a root body (Goal / Phases / Notes) or a chained child body (`Parent: <sha>` + only new/revised phases) per the format above | Yes — `git commit --allow-empty` |
 
 **Ordering when a failure triggers plan revision**: land the `chore(ai):` failure journal first, then a separate `plan:` commit reflecting the revised plan.
 
@@ -119,7 +159,7 @@ Director uses three commit shapes. The shape depends on the task outcome and whe
 
 ## Examples
 
-### A `plan:` commit body
+### A root `plan:` commit body
 
 ```
 plan: initialise plan for JWT authentication
@@ -136,6 +176,23 @@ Goal: Add user-facing auth using short-lived JWTs with refresh tokens.
 > Protect existing /api routes with JWT validation.
 - 2.1 add express-jwt middleware to /api routes
 - 2.2 add tests for middleware (valid / expired / malformed tokens)
+```
+
+### A chained `plan:` commit body
+
+```
+plan: extend with debugging phase after task 2.1 repeated failure
+
+Parent: a1b2c3d4e5f60718293a4b5c6d7e8f9012345678
+
+## Phase 3: Middleware scoping debug
+> Diagnose why express-jwt rejects /auth/* and land a scoped fix.
+- 3.1 reproduce 401 on /auth/login with a minimal repro server
+- 3.2 split /api router so /auth/* sits outside the jwt middleware
+- 3.3 regression test that /auth/login is reachable unauthenticated
+
+Notes: Added after task 2.1 failed twice (see chore(ai) commits 9f8e7d6,
+4c5b6a7). Phases 1–2 carry over from the parent unchanged.
 ```
 
 ### A passed-task commit body
