@@ -1,42 +1,55 @@
 # advisor
 
-A senior Claude Code specialist agent that audits an existing project, recommends Claude Code setup improvements, then writes the refreshed scaffolding so director can plan and execute further changes.
+A senior Claude Code specialist agent that sets up Claude Code for a project or establishes the current goal — audits any prior code, runs structured discovery, then writes the project scaffolding so director can plan and execute.
 
 ## What it does
 
-- Silently reads the entire project before asking a single question (Audit)
-- Surfaces gaps in Claude Code setup, conventions, and dependency health
+- Silently reads the entire project before asking a single question (Audit) — an empty directory just produces a short audit summary
+- Surfaces gaps in Claude Code setup, conventions, and dependency health when prior state exists
 - Validates tech choices and dependency maintenance status via WebSearch
-- Walks through targeted discovery focused only on what it couldn't infer from code
+- Walks through structured discovery — leading with audit findings when prior state exists, asking open-ended when it does not
+- Captures the current project goal in Phase 2 (Scope) — this is what director will work toward
 - Consults the bundled `skillex` MCP server during Phase 6 to surface pre-built skills (from the audit findings and Discovery answers) as candidate features
 - Runs `git init` (if needed) and halts on a dirty tree before touching any files
 - Adds `*.local.*` to `.gitignore` so `CLAUDE.local.md` (and any other `*.local.*` Claude Code conventions) stays out of git
-- Overwrites `CLAUDE.md`, `CLAUDE.local.md`, `.claude/rules/*.md`, and `.claude/settings.local.json` (director permissions; gitignored per-developer, or `.claude/settings.json` if you want them committed) with refreshed versions (git is the audit trail for the tracked files — no backup files, no diff prompts)
+- Writes (or overwrites) `CLAUDE.md`, `CLAUDE.local.md`, `.claude/rules/*.md`, and `.claude/settings.local.json` (director permissions; gitignored per-developer, or `.claude/settings.json` if you want them committed) — git is the audit trail for the tracked files, no backup files, no diff prompts
 
 ## Usage
 
-Invoke the advisor by name in Claude Code. It always runs a silent audit first — reading your project files before presenting findings.
+Invoke the advisor by name in Claude Code. It always runs a silent audit first — reading whatever project files exist before presenting findings.
 
-### Audit an existing project
+### Set up a new project
+
+```
+Use advisor to set up this project
+```
+
+### Audit and improve an existing project
 
 ```
 Use advisor to review this project's Claude Code setup
 ```
 
-The advisor will:
-1. Silently read your project (manifests, README, existing Claude Code files, configs, CI, source structure)
+### Set or change the current goal
+
+```
+Use advisor to set a new goal for this project
+```
+
+In all three cases, advisor will:
+1. Silently read your project (manifests, README, existing Claude Code files, configs, CI, source structure) — fast and short on an empty directory
 2. Present an Audit Summary
-3. Walk through targeted discovery (only asking about gaps)
+3. Walk through the seven discovery phases — confirming what it observed when prior state exists, asking open-ended when it does not
 4. Produce a Requirements Summary for your approval
 5. Ensure git is initialized and the working tree is clean (halt if not), and add `*.local.*` to `.gitignore`
-6. Write / overwrite `CLAUDE.md`, `CLAUDE.local.md`, `.claude/rules/*.md`, and `.claude/settings.local.json`
+6. Write or overwrite `CLAUDE.md`, `CLAUDE.local.md`, `.claude/rules/*.md`, and `.claude/settings.local.json`
 
 ### After the advisor finishes
 
-Once scaffolding is written, invoke director to plan and execute the improvements. `CLAUDE.local.md` is auto-loaded by Claude Code, so director picks up the current goal automatically:
+Once scaffolding is written, invoke director to plan and execute the work. `CLAUDE.local.md` is auto-loaded by Claude Code, so director picks up the current goal automatically:
 
 ```
-Use director to plan and execute the improvements
+Use director to plan and execute the work
 ```
 
 ## Audit Summary
@@ -55,15 +68,15 @@ The advisor reads these areas silently before asking anything:
 
 ## Discovery phases
 
-Same seven phases as the initializer, but the advisor leads each phase with what it already observed and only asks about gaps:
+Seven phases, asked one at a time. When the audit found prior state, each phase leads with what was observed; when it found nothing, each phase is asked open-ended.
 
 | Phase | What it covers |
 |-------|----------------|
-| 1. Problem space | Confirms audit-derived understanding — "I see this is a [language] project that [purpose], is that accurate?" |
-| 2. Scope and constraints | What is stable vs. planned, hard constraints not visible in code |
-| 3. Technical direction | Validates current stack, flags outdated dependencies, confirms deployment and testing |
-| 4. Collaboration | Team size, workflow, ownership |
-| 5. Standards | Reviews existing conventions, linting, commit style, license |
+| 1. Problem space | One-sentence description, users, problem solved — confirms audit-derived understanding when prior state exists |
+| 2. Scope and constraints | Captures the current goal: stable + planned for projects with prior state, MVP + deferred for greenfield; plus hard constraints not visible in code |
+| 3. Technical direction | Validates audit-detected stack via WebSearch, or asks for the chosen language/runtime, dependencies, deployment, and testing strategy and validates the choices |
+| 4. Collaboration | Team size, branching workflow, long-term ownership |
+| 5. Standards | Linting/formatting, CI enforcement, naming and commit conventions, license |
 | 6. Claude Code setup | Proposes features that fit, based on audit findings and discovery answers — plus pre-built skills surfaced by consulting the bundled `skillex` MCP server against those findings |
 | 7. Director permissions | Establishes what the director and subagents may do autonomously (bash commands, file ops, git, network, packages, destructive operations) |
 
@@ -71,12 +84,11 @@ Same seven phases as the initializer, but the advisor leads each phase with what
 
 | Situation | Agent |
 |-----------|-------|
-| **New project, no code yet** | initializer -> director |
-| **Existing project, needs Claude Code setup** | advisor -> director |
+| **Project setup, audit, or goal change** | advisor -> director |
 | **Multi-step implementation work** | director |
 
 ## Tips
 
-- **Let the audit run.** The advisor reads everything silently first — this means fewer questions and more targeted advice.
-- **Be specific about what's working.** The advisor won't touch things that are already fine.
+- **Let the audit run.** The advisor reads everything silently first — this means fewer questions and more targeted advice on a project that has prior state.
+- **Be specific about scope.** The Scope you confirm in Phase 2 is the current goal director will work toward, so it pays to be precise about what's in versus out.
 - **You can say no.** The advisor proposes Claude Code features but doesn't force them. Decline anything that doesn't fit.

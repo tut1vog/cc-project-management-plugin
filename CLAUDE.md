@@ -1,6 +1,6 @@
 # cc-project-management-plugin
 
-A Claude Code plugin bundling three orchestration subagents (`initializer`, `advisor`, `director`), the `plan-management` skill, and the `skillex-mcp` server — distributed as a single-plugin marketplace so users can install it globally with `/plugin install` instead of copying `.md` files into every project.
+A Claude Code plugin bundling two orchestration subagents (`advisor`, `director`), the `plan-management` skill, and the `skillex-mcp` server — distributed as a single-plugin marketplace so users can install it globally with `/plugin install` instead of copying `.md` files into every project.
 
 ## Stack
 - Language / runtime: **none at build time** — the repo is Markdown (agent definitions, rules, docs) and JSON (plugin manifests, MCP config).
@@ -14,7 +14,6 @@ A Claude Code plugin bundling three orchestration subagents (`initializer`, `adv
 │   ├── plugin.json         # plugin manifest (name, version, metadata)
 │   └── marketplace.json    # self-referential single-plugin marketplace catalog
 ├── agents/                 # subagent definitions — one .md per agent (plugin spec location)
-│   ├── initializer.md
 │   ├── advisor.md
 │   └── director.md
 ├── skills/                 # bundled skills — one dir per skill (plugin spec location)

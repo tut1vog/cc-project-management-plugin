@@ -35,7 +35,7 @@ Goal: move director's plan from a tracked file into git history.
 ## Phase 1: Director rewrite
 > Update director.md to read/write plans via `plan:` commits.
 - 1.1 rewrite director.md plan-storage section
-- 1.2 update advisor/initializer cascading references
+- 1.2 update advisor to reference plan: commits
 
 ## Phase 2: Verify end-to-end
 > Confirm plugin loads and director can plan against the new model.

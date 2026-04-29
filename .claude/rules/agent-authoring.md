@@ -9,9 +9,8 @@
 - One agent, one responsibility. If an agent has two distinct jobs, split it into two agents. Narrow scope + precise `description` is what makes auto-selection reliable.
 - State the tools the agent may use explicitly inside the body (e.g. "You have access to Read, Write, Edit, Glob, Grep, Bash, WebSearch, WebFetch."). Don't rely on implicit tool sets.
 - Cross-agent references use bare agent names (e.g. "hand off to director"), not plugin-namespaced paths — subagents keep their bare names even when the plugin is installed.
-- When editing an existing agent, preserve its contract with the others. `advisor` and `initializer` both scaffold `CLAUDE.local.md` for `director` to consume (auto-loaded by Claude Code at session start; gitignored via `*.local.*`); changing the structure of `CLAUDE.local.md` requires updating both agents. `director` does not write to `CLAUDE.local.md` — it stores the live plan in git history via `plan:` empty commits, with the format documented in `skills/plan-management/SKILL.md`.
+- When editing an existing agent, preserve its contract with the others. `advisor` writes `CLAUDE.local.md` for `director` to consume (auto-loaded by Claude Code at session start; gitignored via `*.local.*`). `director` does not write to `CLAUDE.local.md` — it stores the live plan in git history via `plan:` empty commits, with the format documented in `skills/plan-management/SKILL.md`.
 - After any edit to `agents/*.md`, verify the plugin still loads: `claude --plugin-dir ./` then `/agents` — all expected agents must appear.
-- `initializer` and `advisor` deliberately share their Scaffold and Handoff sections, including the skillex-consultation pattern. When editing one of these shared blocks, update both agents in the same commit. Shared blocks: Claude Code Features table, Phase 7 Director Permissions table, Requirements Summary fields, Scaffold Steps 1–5 (CLAUDE.md and CLAUDE.local.md templates both live in Step 2), and the skillex consultation paragraph.
 
 ## Rules (skills)
 - Each skill is a directory at `skills/<skill-name>/` containing a `SKILL.md` file. The directory name and the frontmatter `name` must match (kebab-case).
