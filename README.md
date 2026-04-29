@@ -4,9 +4,9 @@ A Claude Code plugin that manages and automates Claude Code projects — from in
 
 ## Prerequisites
 
-- **Claude Code with plugin support.** You need a version of Claude Code that recognizes the `/plugin` slash commands (`/plugin marketplace add`, `/plugin install`).
-- **Node ≥ 20** on your machine. The bundled `skillex-mcp` server is launched via `npx`, which requires a modern Node runtime. Check with `node --version`.
-- **First-launch delay.** The very first Claude Code session after installing this plugin takes roughly 30–120 seconds to start, because `skillex-mcp`'s `prepare` script compiles TypeScript at install time. Subsequent launches are served from the `npx` cache and start fast.
+* **Claude Code with plugin support.** You need a version of Claude Code that recognizes the `/plugin` slash commands (`/plugin marketplace add`, `/plugin install`).
+* **Node ≥ 20** on your machine. The bundled `skillex-mcp` server is launched via `npx`, which requires a modern Node runtime. Check with `node --version`.
+* **First-launch delay.** The very first Claude Code session after installing this plugin takes roughly 30–120 seconds to start, because `skillex-mcp`'s `prepare` script compiles TypeScript at install time. Subsequent launches are served from the `npx` cache and start fast.
 
 ## Installation
 
@@ -29,12 +29,12 @@ If you want to point skillex at a different set of repositories, set the `SKILLS
 
 Two important details about how this variable works:
 
-- **It is comma-separated.** List multiple repos as `owner1/repo1,owner2/repo2` with no spaces around the commas.
-- **Your value replaces the default — it does not extend it.** Skillex has no append semantics. If you want to keep `anthropics/skills` while adding your own, you must include `anthropics/skills` explicitly in your list.
+* **It is comma-separated.** List multiple repos as `owner1/repo1,owner2/repo2` with no spaces around the commas.
+* **Your value replaces the default — it does not extend it.** Skillex has no append semantics. If you want to keep `anthropics/skills` while adding your own, you must include `anthropics/skills` explicitly in your list.
 
 Examples:
 
-```bash
+```Shell
 # one-off: set for a single session
 SKILLS_MCP_REPOS="anthropics/skills,myorg/my-skills" claude
 
