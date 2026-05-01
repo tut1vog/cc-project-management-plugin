@@ -2,6 +2,9 @@
 
 A Claude Code plugin bundling three orchestration subagents (`scaffolder`, `director`, `investigator`) and three skills (`plan-management`, `project-scaffolding`, `skill-catalog`) — distributed as a single-plugin marketplace so users can install it globally with `/plugin install` instead of copying `.md` files into every project.
 
+## IMPORTANT
+Only update version in plugin.json when we make a new release 
+
 ## Stack
 - Language / runtime: **none at build time** — the repo is Markdown (agent definitions, rules, docs), JSON (plugin manifests), and stdlib-only Python helpers (`bin/plan-management`, `bin/skill-catalog`).
 - Runtime dependencies on consumer machines: **Python 3** (required by both `bin/` helpers) and the **`gh` CLI** authenticated via `gh auth login` (required only by `skill-catalog` for GitHub-backed catalog search; if absent, scaffolder skips catalog search and Discovery still completes).
