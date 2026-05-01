@@ -6,15 +6,13 @@
 - Never tag a release if any of the following haven't passed:
   1. `python3 -m json.tool .claude-plugin/plugin.json` — valid JSON.
   2. `python3 -m json.tool .claude-plugin/marketplace.json` — valid JSON.
-  3. `python3 -m json.tool .mcp.json` — valid JSON.
-  4. `claude --plugin-dir ./` — plugin loads and all three agents appear in `/agents`.
+  3. `claude --plugin-dir ./` — plugin loads and all three agents appear in `/agents`.
 - Release procedure:
   1. Update `plugin.json` `version` to the target, commit with `chore: bump plugin.json to v<x.y.z>`.
   2. Tag: `git tag v<x.y.z>` on that commit.
   3. Push: `git push origin main --tags`.
 - `git push` and `git tag` both require user confirmation on this repo (permissions live in `.claude/settings.local.json`). Do not autonomously push release tags.
-- Treat a change to `.mcp.json`'s `args` (e.g. switching from github source to npm) as a **MINOR** bump — it changes what the plugin executes on consumer machines.
-- Treat a change to default `SKILLS_MCP_REPOS` as a **MINOR** bump — it changes what users see by default.
+- Treat a change to `DEFAULT_REPOS` in `bin/skill-catalog` as a **MINOR** bump — it changes what users see by default when `~/.claude/skill-repos.json` is absent.
 
 ## Examples
 
@@ -25,7 +23,7 @@ git add .claude-plugin/plugin.json
 git commit -m "chore: bump plugin.json to v0.2.0"
 # verify
 python3 -m json.tool .claude-plugin/plugin.json
-python3 -m json.tool .mcp.json
+python3 -m json.tool .claude-plugin/marketplace.json
 claude --plugin-dir ./  # manual check: /agents lists all three
 # tag
 git tag v0.2.0

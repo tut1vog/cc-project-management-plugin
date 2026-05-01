@@ -14,10 +14,11 @@
 
 Good commits:
 ```
-feat(mcp): wire skillex server with anthropics/skills as default index
+feat(skill-catalog): add gh-backed catalog search helper
 
-Ships .mcp.json so the plugin boots with a working skill catalog
-out of the box. Users override via SKILLS_MCP_REPOS env var.
+Ships bin/skill-catalog so scaffolder can surface pre-built
+SKILL.md files from a user-configurable trusted-repos list at
+~/.claude/skill-repos.json.
 ```
 ```
 docs: rewrite README install section for /plugin install workflow

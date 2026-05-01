@@ -7,7 +7,7 @@
     {
       "name": "cc-project-management-plugin",
       "source": "./",
-      "description": "Three orchestration subagents for Claude Code (scaffolder, director, investigator), the plan-management and project-scaffolding skills, and the skillex-mcp server."
+      "description": "Three orchestration subagents for Claude Code (scaffolder, director, investigator) and the plan-management, project-scaffolding, and skill-catalog skills."
     }
   ]
 }

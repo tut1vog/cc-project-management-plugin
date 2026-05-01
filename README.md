@@ -1,12 +1,12 @@
 # Claude Code Project Management Plugin
 
-A Claude Code plugin that manages and automates Claude Code projects — from initial setup through ongoing development. Install it once and get two orchestration subagents (`scaffolder`, `director`), the `plan-management` skill that any agent can use to read or write the project plan, and the `skillex-mcp` server, for structured planning, execution, and verification across every project you work in.
+A Claude Code plugin that manages and automates Claude Code projects — from initial setup through ongoing development. Install it once and get three orchestration subagents (`scaffolder`, `director`, `investigator`) plus the `plan-management`, `project-scaffolding`, and `skill-catalog` skills, for structured planning, execution, debugging, and verification across every project you work in.
 
 ## Prerequisites
 
 * **Claude Code with plugin support.** You need a version of Claude Code that recognizes the `/plugin` slash commands (`/plugin marketplace add`, `/plugin install`).
-* **Node ≥ 20** on your machine. The bundled `skillex-mcp` server is launched via `npx`, which requires a modern Node runtime. Check with `node --version`.
-* **First-launch delay.** The very first Claude Code session after installing this plugin takes roughly 30–120 seconds to start, because `skillex-mcp`'s `prepare` script compiles TypeScript at install time. Subsequent launches are served from the `npx` cache and start fast.
+* **Python 3** on your `PATH`. The bundled `bin/` helpers (`plan-management`, `skill-catalog`) use only the Python standard library.
+* **`gh` CLI authenticated** *(optional — required only for the `skill-catalog` catalog search)*. Install from https://cli.github.com/ and run `gh auth login`, or set `GITHUB_TOKEN`. Without it, scaffolder skips catalog search and Discovery still completes.
 
 ## Installation
 
@@ -21,26 +21,26 @@ The first command registers this repo as a single-plugin marketplace named `tut1
 
 To pick up a new version later, re-run `/plugin install cc-project-management-plugin@tut1vog-plugins` (or use whatever update command your Claude Code version provides).
 
-## Configuring skills
+## Configuring skill-catalog
 
-The plugin ships a `.mcp.json` that wires up the `skillex-mcp` server with `anthropics/skills` as the baked-in default skill repository. You don't need to configure anything for the default behavior to work.
+The `skill-catalog` skill searches GitHub for `SKILL.md` files in a list of trusted repositories. The default list is `["anthropics/skills"]` baked into `bin/skill-catalog`, so you don't need to configure anything for the default behavior to work.
 
-If you want to point skillex at a different set of repositories, set the `SKILLS_MCP_REPOS` environment variable before launching Claude Code.
+To customize the list, create `~/.claude/skill-repos.json` — a JSON array of strings:
 
-Two important details about how this variable works:
-
-* **It is comma-separated.** List multiple repos as `owner1/repo1,owner2/repo2` with no spaces around the commas.
-* **Your value replaces the default — it does not extend it.** Skillex has no append semantics. If you want to keep `anthropics/skills` while adding your own, you must include `anthropics/skills` explicitly in your list.
-
-Examples:
-
-```Shell
-# one-off: set for a single session
-SKILLS_MCP_REPOS="anthropics/skills,myorg/my-skills" claude
-
-# persistent: export in a shell profile (e.g. ~/.bashrc or ~/.zshrc)
-export SKILLS_MCP_REPOS="anthropics/skills,myorg/my-skills"
+```json
+[
+  "anthropics/skills",
+  "myorg/my-skills",
+  "anotherorg/some-repo"
+]
 ```
+
+Each entry is either:
+
+* `<owner>` — search every public `SKILL.md` under that GitHub user/org.
+* `<owner>/<repo>` — search `SKILL.md` files only inside that repository.
+
+The file is the full list (the built-in default is only used when the file is absent). To inspect what's covered, `cat ~/.claude/skill-repos.json`. The file lives in your home directory so plugin updates and reinstalls never touch it.
 
 ## The Agents
 
@@ -56,11 +56,19 @@ The orchestrator. Reads `CLAUDE.local.md` (auto-loaded by Claude Code) for the c
 
 A debugging specialist. Diagnoses bugs and reports a root-cause hypothesis without applying the fix — director dispatches it for diagnose-only tasks, and the fix lands as a separate task on a different agent, the same separation-of-concerns principle that keeps implementation and tests on different agents. Operates in three modes: **Understand** (extract bug shape from the request, read implicated source, walk git history with `git log` / `git blame` / `git show`, reproduce when feasible — temporary instrumentation like extra logs, `print` statements, or scratch scripts is allowed during this phase), **Research** (optional — look for prior reports of the same symptom via `WebSearch`, `WebFetch`, and the `gh` CLI through `Bash` when the user has it authenticated; every external finding is cited by URL), and **Hypothesize** (synthesize evidence into a single most-likely cause, classify it as **logic** — a localized defect inside one function or module — or **architectural** — a structural cause crossing module boundaries — and state a confidence level with what would raise it). Closes out by reverting every instrumentation edit so `git status` shows a clean tree, then emits a structured Investigation Report that director pastes verbatim into the `Task:` journal entry. Never makes git commits, never applies fixes (even for clear logic bugs), and never leaves the working tree dirty; for architectural causes, the report asks director to propose a separate fix phase to the user before any code change happens.
 
-## The Skill
+## The Skills
 
 ### plan-management
 
 A bundled skill that owns the canonical format spec for `plan:` and `Task:` journal commit messages, plus the git commands to read and parse them. **Director uses it to write** new plan and task commits; **any other agent uses it to read** the current plan, derive task status (done / in-progress / pending), or look up a prior task's outcome — without needing to inline the format spec in its own prompt. Because the plan and task journal live entirely in `git log`, the skill needs only the `Bash` tool, so it works in any subagent that has shell access. Treat the skill as the single source of truth for the format: if it ever evolves, only one file changes.
+
+### project-scaffolding
+
+The canonical spec for the durable files **scaffolder** writes after Discovery — `CLAUDE.md`, `CLAUDE.local.md`, `.claude/rules/*.md`, `.claude/settings.local.json` — plus the Requirements Summary input contract and a catalog of hybrid rule templates filled from Discovery answers. Scaffolder reads it before writing the scaffolding; if you want to extend or audit what gets written, this is the file to look at.
+
+### skill-catalog
+
+Wraps `bin/skill-catalog`, the `gh`-backed helper that searches the configured trusted repositories for pre-built `SKILL.md` files. Scaffolder consults it during Phase 6 of Discovery to surface candidate skills for the project. Any agent with `Bash` access can run `skill-catalog search "<query>"` and `skill-catalog get <id>` directly.
 
 ## How They Work Together
 
