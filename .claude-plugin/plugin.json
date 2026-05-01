@@ -1,6 +1,6 @@
 {
   "name": "cc-project-management-plugin",
-  "version": "0.13.0",
+  "version": "0.13.1",
   "description": "Three orchestration subagents for Claude Code (scaffolder, director, investigator) that set up Claude Code or refresh the current goal, autonomously drive execution, and research technical questions (bug root causes, feature design, library choices, architectural alternatives) without implementing — bundled with the plan-management, project-scaffolding, skill-catalog, prior-art-research, and discovery-grilling skills.",
   "author": {
     "name": "tut1vog"
