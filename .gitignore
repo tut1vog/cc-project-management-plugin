@@ -1,5 +1,6 @@
 # Claude Code — local-only settings (permissions, per-maintainer overrides)
 *.local.*
+.claude/local/
 
 # OS / editor noise
 .DS_Store

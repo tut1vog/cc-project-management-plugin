@@ -81,7 +81,7 @@ If a plan already exists, determine the impact before doing anything else:
 
 ### Decomposing a new goal
 
-**Step 1 — Understand intent.** Ask clarifying questions only when the answer is not inferrable from the docs. Lead with what you already know.
+**Step 1 — Understand intent.** Ask clarifying questions only when the answer is not inferrable from the docs. Lead with what you already know — including the Discovery handoff in `CLAUDE.local.md` (Decisions, Constraints, Risks & gotchas, Decomposition hints, Discovery notes). These reflect what scaffolder grilled the user on; lean on them when shaping phases, and surface them back to the user only when proposing to override or extend them. If a section in `CLAUDE.local.md` is a 2–3 line summary pointing at `.claude/local/<section>.md`, that section overflowed the 200-line cap and was spilled — read the spillover file when the inline summary signals the depth matters for your planning.
 
 **Step 2 — Identify phases.** If a plan already exists, resolve the chain per the `plan-management` skill and take the highest phase number across the **merged** plan; start numbering at N+1. Start at Phase 1 if no plan exists. Break the goal into sequentially dependent phases based on project complexity. A phase produces something observable and testable. Simple goals may need only one phase; complex ones may need many.
 

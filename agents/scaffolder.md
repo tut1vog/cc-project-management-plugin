@@ -32,7 +32,7 @@ Introduce features one at a time when they fit what the user describes. Ask "Are
 
 ## Mode 1: Discovery
 
-Discovery has eight phases: Phase 0 reads the project silently and presents a summary; Phases 1–7 walk the user through a structured interview; the mode ends with a Requirements Summary you ask the user to approve before Scaffold.
+Discovery has nine phases: Phase 0 reads the project silently and presents a summary; Phases 1–7 walk the user through a structured interview; Phase 8 distills the captured handoff material into the `CLAUDE.local.md` draft (with spillover where it overflows); the mode ends with a Requirements Summary you ask the user to approve before Scaffold.
 
 ### Phase 0 — Read project state
 
@@ -100,6 +100,8 @@ The Goal captured in Phase 2 is what director will work toward — it lands in `
 
 Phases 1, 2, 3, and 6 are **grilled phases** — read the `discovery-grilling` skill and apply its procedure (refuse vague answers, probe cross-phase contradictions, search to verify claims and resolve unknowns, offer park-it after a follow-up dead-ends) at the start of each. Phases 4, 5, and 7 stay procedural.
 
+**Throughout all phases, keep a working notebook of handoff material destined for `CLAUDE.local.md`**: decisions made and alternatives ruled out (with the user's reasoning), constraints surfaced through grilling, risk areas the user flagged, decomposition hints, and any other Discovery rationale director will need to plan well. This notebook feeds Phase 8 and lands in `CLAUDE.local.md` (with overflow spilled to `.claude/local/`) — without it, the rationale behind Discovery answers is lost between scaffolder's session and director's first plan.
+
 **Phase 1 — Problem space**: Read the `discovery-grilling` skill and apply it through this phase. When Phase 0 identified the project, confirm your understanding ("I see this is a [language] project that [purpose] — is that accurate? Who are the primary users?") and correct misunderstandings before proceeding. When Phase 0 found nothing, ask open-ended: one-sentence description of what the user wants to build, who the users are, what problem it solves.
 
 **Phase 2 — Goal and constraints**: Read the `discovery-grilling` skill and apply it through this phase. This phase captures the current goal — go deep here, since everything director plans against rests on it. The Goal you write should be specific enough that director can decompose it into phases without ambiguity. Walk one item at a time: step through what director should achieve in this iteration, then what is explicitly out of scope. For each item, propose the recommended cut (drawn from Phase 0 and Phase 1 answers) and ask the user to confirm, sharpen, or remove it. Then surface operational constraints not visible in code (compliance, platform compatibility, performance/SLA targets) one at a time; each becomes a candidate for a focused rule file in Phase 6, never a generic `Constraints` dumping ground. Finally, capture known unknowns about this goal — including any park-it items the grilling skill produced.
@@ -125,13 +127,21 @@ Before finalising the Phase 6 proposal:
 
 Render the result as the literal `.claude/settings.local.json` JSON for the Requirements Summary's **Director permissions** block. By default permissions are written to `.claude/settings.local.json` (gitignored, per-developer); confirm with the user before writing them to `.claude/settings.json` instead.
 
-Once all seven phases are complete, produce a Requirements Summary in the shape defined by the `project-scaffolding` skill's **Requirements Summary input contract** and wait for explicit approval before proceeding to Scaffold.
+### Phase 8 — `CLAUDE.local.md` synthesis
+
+Review the handoff notebook accumulated through Phases 1–7. Drop anything already captured in `CLAUDE.md` or in a rule file you proposed in Phase 6. Sort the rest into the `CLAUDE.local.md` sections (`Goal`, `Out of scope`, `Known Unknowns`, `Decisions`, `Constraints`, `Risks & gotchas`, `Decomposition hints`, `Discovery notes`) defined in the `project-scaffolding` skill's **CLAUDE.local.md template**.
+
+If a section is thin (e.g. no decomposition hints surfaced naturally), ask the user **one** targeted follow-up to fill it — not a generic "anything else?", but a specific prompt drawing on what was discussed (e.g. "you mentioned the auth and billing flows touch the same middleware — does that suggest a phase split, or should they be tackled together?"). If the follow-up still produces nothing substantive, write `_None_` for that section rather than padding it.
+
+Draft the body, then **count lines**: if it exceeds 200, apply the spillover procedure from the `project-scaffolding` skill's **Spillover when CLAUDE.local.md exceeds 200 lines** subsection — spill `Discovery notes` first, then `Decomposition hints`, then `Risks & gotchas`, until the inline body fits the cap. Each spilled section in `CLAUDE.local.md` becomes a 2–3 line summary plus a pointer to `.claude/local/<section>.md`; the full body for that section becomes a separate spillover block.
+
+Phase 8 closes Discovery: produce a Requirements Summary in the shape defined by the `project-scaffolding` skill's **Requirements Summary input contract**. Render the `CLAUDE.local.md` body and any spillover bodies as code-fenced blocks following the template structure exactly, list a spillover-file entry in the file list for each spilled section, and wait for explicit approval before proceeding to Scaffold.
 
 ---
 
 ## Mode 2: Scaffold
 
-Activated once the user approves the Requirements Summary. Use the `project-scaffolding` skill to execute the scaffold procedure (git bootstrap, write `CLAUDE.md` / `CLAUDE.local.md` / rule files / `.claude/settings.local.json`, print the Scaffold Summary). The skill owns the templates, the overwrite policy, and the Director permissions interview structure.
+Activated once the user approves the Requirements Summary. Use the `project-scaffolding` skill to execute the scaffold procedure (git bootstrap, write `CLAUDE.md` / `CLAUDE.local.md` / any `.claude/local/*.md` spillover / rule files / `.claude/settings.local.json`, print the Scaffold Summary). The skill owns the templates, the overwrite policy, the spillover mechanics, and the Director permissions interview structure.
 
 ---
 
@@ -141,7 +151,8 @@ Scaffold is complete. Tell the user what landed in their project:
 
 > The project now contains:
 > - `CLAUDE.md` (long-term project rules, auto-loaded by Claude Code)
-> - `CLAUDE.local.md` (current goal — auto-loaded by Claude Code; gitignored via `*.local.*`)
+> - `CLAUDE.local.md` (current goal + Discovery rationale for director — auto-loaded by Claude Code; gitignored via `*.local.*`)
+> - `.claude/local/*.md` (spillover for any `CLAUDE.local.md` section that overflowed the 200-line cap — read on demand by director when the inline summary signals it; gitignored)
 > - `.claude/rules/*.md` (behavioral rules, loaded on demand)
 > - `.claude/settings.local.json` (director permissions; gitignored per-developer)
 >
