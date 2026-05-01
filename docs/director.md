@@ -113,7 +113,7 @@ Director bookkeeping commits use the `chore(ai):` prefix so they can be filtered
 ## Workflow overview
 
 ```
-You ──→ advisor ──→ CLAUDE.local.md
+You ──→ scaffolder ──→ CLAUDE.local.md
                                                               |
                                                               ▼
                                                         director

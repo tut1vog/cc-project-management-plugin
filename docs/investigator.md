@@ -66,7 +66,7 @@ The agent always emits this exact structure:
 | **Diagnose a bug — find the root cause without fixing it** | investigator |
 | **Plan and execute the fix once the cause is known** | director (which dispatches a fixer subagent) |
 | **Multi-step implementation work** | director |
-| **Project setup, review, or goal change** | advisor → director |
+| **Project setup, review, or goal change** | scaffolder → director |
 
 ## Tips
 

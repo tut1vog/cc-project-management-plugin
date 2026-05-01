@@ -1,6 +1,6 @@
 # Claude Code Project Management Plugin
 
-A Claude Code plugin that manages and automates Claude Code projects — from initial setup through ongoing development. Install it once and get two orchestration subagents (`advisor`, `director`), the `plan-management` skill that any agent can use to read or write the project plan, and the `skillex-mcp` server, for structured planning, execution, and verification across every project you work in.
+A Claude Code plugin that manages and automates Claude Code projects — from initial setup through ongoing development. Install it once and get two orchestration subagents (`scaffolder`, `director`), the `plan-management` skill that any agent can use to read or write the project plan, and the `skillex-mcp` server, for structured planning, execution, and verification across every project you work in.
 
 ## Prerequisites
 
@@ -44,7 +44,7 @@ export SKILLS_MCP_REPOS="anthropics/skills,myorg/my-skills"
 
 ## The Agents
 
-### advisor
+### scaffolder
 
 Sets up Claude Code for a project or establishes the current goal — works for greenfield projects, for existing projects where Claude Code is missing or partial, and when you want to set or change the current goal on a project that already has Claude Code in place. Silently reads whatever code is already there (README, manifests, linting configs, CI, existing Claude Code setup), then walks through structured discovery (problem space, scope and goal, tech stack, collaboration, standards), recommends which Claude Code features to use, and establishes **director permissions** — what the director and its subagents may do autonomously versus what requires your confirmation (shell commands, file operations, git, network access, package management, destructive operations). Writes the scaffolding: `CLAUDE.md` (long-term project facts, auto-loaded), `CLAUDE.local.md` (current goal — auto-loaded; gitignored via `*.local.*`), `.claude/rules/*.md` (on-demand behavioral rules), and `.claude/settings.local.json` (director permissions; gitignored per-developer, or `.claude/settings.json` if you want them committed). Runs `git init` first if the directory isn't a git repo and adds `*.local.*` to `.gitignore`. Halts on a dirty git tree and asks to commit, stash, or abort before touching anything — git is the audit trail, so there are no backup files or diff prompts.
 
@@ -69,12 +69,12 @@ The agents form a pipeline: **discover intent → plan work → execute and veri
 ### Setup or new goal
 
 ```
-You ──→ advisor ──→ CLAUDE.local.md ──→ director ──→ subagents do the work
+You ──→ scaffolder ──→ CLAUDE.local.md ──→ director ──→ subagents do the work
          (silent read + discovery)                 (plan → dispatch → verify loop)
 ```
 
-1. Invoke **advisor**. It silently reads whatever code is already there (an empty directory just produces a short project summary), then walks through discovery — problem space, scope and goal, stack, collaboration, standards. It proposes Claude Code features based on what it found and what you answered, and walks through **director permissions** — which shell commands, file operations, git actions, and other operations the director and its subagents may perform autonomously, and which require your confirmation.
-2. Once you approve the requirements summary (including permissions), advisor writes the scaffolding: `CLAUDE.md`, `CLAUDE.local.md`, `.claude/rules/*.md`, and `.claude/settings.local.json`. It runs `git init` first if needed and adds `*.local.*` to `.gitignore` so `CLAUDE.local.md` stays untracked. On a project with prior state it overwrites the same files; it halts first if the git tree is dirty, so you can commit or stash before it touches anything.
+1. Invoke **scaffolder**. It silently reads whatever code is already there (an empty directory just produces a short project summary), then walks through discovery — problem space, scope and goal, stack, collaboration, standards. It proposes Claude Code features based on what it found and what you answered, and walks through **director permissions** — which shell commands, file operations, git actions, and other operations the director and its subagents may perform autonomously, and which require your confirmation.
+2. Once you approve the requirements summary (including permissions), scaffolder writes the scaffolding: `CLAUDE.md`, `CLAUDE.local.md`, `.claude/rules/*.md`, and `.claude/settings.local.json`. It runs `git init` first if needed and adds `*.local.*` to `.gitignore` so `CLAUDE.local.md` stays untracked. On a project with prior state it overwrites the same files; it halts first if the git tree is dirty, so you can commit or stash before it touches anything.
 3. Invoke **director**. It picks up `CLAUDE.local.md` automatically (Claude Code auto-loads it), decomposes the goal into phases and tasks, each assigned to the most appropriate subagent, then runs an autonomous dispatch → execute → verify loop until the plan is complete.
 
 ### Ongoing development

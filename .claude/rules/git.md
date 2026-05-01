@@ -1,7 +1,5 @@
 # Git
 
-**When to read this**: read before making any commit or tag.
-
 ## Rules
 - Use [Conventional Commits](https://www.conventionalcommits.org/): `<type>(<scope>)?: <subject>`. Types in use here: `feat`, `fix`, `chore`, `docs`, `refactor`, `test`, `build`, `ci`, plus director-only `plan`. The `chore(ai):` scope is reserved for director's task-journal bookkeeping commits (failures, supersessions, no-op events). The `plan:` type is reserved for director's empty plan-definition commits — see `skills/plan-management/SKILL.md` for the body schemas and read/write commands.
 - Keep subject lines ≤72 chars, imperative mood, lowercase after the colon.

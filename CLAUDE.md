@@ -1,6 +1,6 @@
 # cc-project-management-plugin
 
-A Claude Code plugin bundling two orchestration subagents (`advisor`, `director`), the `plan-management` skill, and the `skillex-mcp` server — distributed as a single-plugin marketplace so users can install it globally with `/plugin install` instead of copying `.md` files into every project.
+A Claude Code plugin bundling three orchestration subagents (`scaffolder`, `director`, `investigator`), the `plan-management` and `project-scaffolding` skills, and the `skillex-mcp` server — distributed as a single-plugin marketplace so users can install it globally with `/plugin install` instead of copying `.md` files into every project.
 
 ## Stack
 - Language / runtime: **none at build time** — the repo is Markdown (agent definitions, rules, docs), JSON (plugin manifests, MCP config), and one stdlib-only Python helper (`bin/plan-management`).
@@ -14,11 +14,15 @@ A Claude Code plugin bundling two orchestration subagents (`advisor`, `director`
 │   ├── plugin.json         # plugin manifest (name, version, metadata)
 │   └── marketplace.json    # self-referential single-plugin marketplace catalog
 ├── agents/                 # subagent definitions — one .md per agent (plugin spec location)
-│   ├── advisor.md
-│   └── director.md
+│   ├── scaffolder.md
+│   ├── director.md
+│   └── investigator.md
 ├── skills/                 # bundled skills — one dir per skill (plugin spec location)
-│   └── plan-management/
-│       └── SKILL.md
+│   ├── plan-management/
+│   │   └── SKILL.md
+│   └── project-scaffolding/
+│       ├── SKILL.md
+│       └── references/     # hybrid rule templates filled from Discovery answers
 ├── bin/                    # executables added to the Bash tool's PATH while the plugin is enabled
 │   └── plan-management     # stdlib Python: walks plan: chains, prints merged plan
 ├── .mcp.json               # skillex-mcp wiring (default SKILLS_MCP_REPOS=anthropics/skills)
@@ -54,6 +58,7 @@ Each rule file below is a focused behavioral contract. Read a rule file when its
 
 ## Skills (bundled)
 - `skills/plan-management/SKILL.md` — canonical format spec and read/write commands for the `plan:` and `Task:` journal commit messages director uses to store plan state in git history. Read it before editing director's plan/journal behavior or any agent that needs to inspect plan state.
+- `skills/project-scaffolding/SKILL.md` — canonical spec for the durable files scaffolder writes after Discovery (`CLAUDE.md`, `CLAUDE.local.md`, rule files, `.claude/settings.local.json`) plus the Requirements Summary input contract and reference template catalog. Read it before editing scaffolder's behavior, the file overwrite/git-bootstrap policy, or the rule reference templates.
 
 ## Permissions
 Director's permissions for this repo live in the maintainer's local `.claude/settings.local.json` (gitignored).

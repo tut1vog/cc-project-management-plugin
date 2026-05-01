@@ -1,7 +1,5 @@
 # Releasing
 
-**When to read this**: read before bumping the plugin version or cutting a release.
-
 ## Rules
 - Bump **only** `.claude-plugin/plugin.json` `version` when releasing. `.claude-plugin/marketplace.json` has no per-plugin version field in the current manifest — if a `version` is added to the marketplace plugin entry later, it must match `plugin.json` exactly.
 - Version scheme: [SemVer](https://semver.org/). Pre-1.0 releases bump MINOR for any user-visible change; bump PATCH only for documentation / metadata fixes that don't change what the plugin loads.

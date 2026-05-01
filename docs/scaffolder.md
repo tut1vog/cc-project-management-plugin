@@ -1,4 +1,4 @@
-# advisor
+# scaffolder
 
 A senior Claude Code specialist agent that sets up Claude Code for a project or establishes the current goal — reads any prior code, runs structured discovery, then writes the project scaffolding so director can plan and execute.
 
@@ -16,27 +16,27 @@ A senior Claude Code specialist agent that sets up Claude Code for a project or 
 
 ## Usage
 
-Invoke the advisor by name in Claude Code. It always reads the project silently first — reading whatever project files exist before presenting findings.
+Invoke the scaffolder by name in Claude Code. It always reads the project silently first — reading whatever project files exist before presenting findings.
 
 ### Set up a new project
 
 ```
-Use advisor to set up this project
+Use scaffolder to set up this project
 ```
 
 ### Review and improve an existing project
 
 ```
-Use advisor to review this project's Claude Code setup
+Use scaffolder to review this project's Claude Code setup
 ```
 
 ### Set or change the current goal
 
 ```
-Use advisor to set a new goal for this project
+Use scaffolder to set a new goal for this project
 ```
 
-In all three cases, advisor will:
+In all three cases, scaffolder will:
 1. Silently read your project (manifests, README, existing Claude Code files, configs, CI, source structure) — fast and short on an empty directory
 2. Present a Project Summary
 3. Walk through the seven discovery phases — confirming what it observed when prior state exists, asking open-ended when it does not
@@ -44,7 +44,7 @@ In all three cases, advisor will:
 5. Ensure git is initialized and the working tree is clean (halt if not), and add `*.local.*` to `.gitignore`
 6. Write or overwrite `CLAUDE.md`, `CLAUDE.local.md`, `.claude/rules/*.md`, and `.claude/settings.local.json`
 
-### After the advisor finishes
+### After the scaffolder finishes
 
 Once scaffolding is written, invoke director to plan and execute the work. `CLAUDE.local.md` is auto-loaded by Claude Code, so director picks up the current goal automatically:
 
@@ -54,7 +54,7 @@ Use director to plan and execute the work
 
 ## Project Summary
 
-The advisor reads these areas silently before asking anything:
+The scaffolder reads these areas silently before asking anything:
 
 | Area | What it checks |
 |------|----------------|
@@ -84,11 +84,11 @@ Seven phases, asked one at a time. When Phase 0 found prior state, each phase le
 
 | Situation | Agent |
 |-----------|-------|
-| **Project setup, review, or goal change** | advisor -> director |
+| **Project setup, review, or goal change** | scaffolder -> director |
 | **Multi-step implementation work** | director |
 
 ## Tips
 
-- **Let Phase 0 run.** The advisor reads everything silently first — this means fewer questions and more targeted advice on a project that has prior state.
+- **Let Phase 0 run.** The scaffolder reads everything silently first — this means fewer questions and more targeted advice on a project that has prior state.
 - **Be specific about scope.** The Scope you confirm in Phase 2 is the current goal director will work toward, so it pays to be precise about what's in versus out.
-- **You can say no.** The advisor proposes Claude Code features but doesn't force them. Decline anything that doesn't fit.
+- **You can say no.** The scaffolder proposes Claude Code features but doesn't force them. Decline anything that doesn't fit.

@@ -1,7 +1,5 @@
 # No legacy references
 
-**When to read this**: read before editing any prose in `agents/`, `skills/`, `.claude/rules/`, `docs/`, `README.md`, or `CLAUDE.md`.
-
 ## Rules
 - Describe the current state only. Do not mention removed, renamed, or superseded artifacts (files, flags, conventions, behaviors) — even to negate them.
 - Negation still anchors the reader to the obsolete model and adds noise. Drop the clause; the positive statement stands on its own.

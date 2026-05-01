@@ -1,7 +1,5 @@
 # Agent and skill authoring
 
-**When to read this**: read before creating or editing any file under `agents/` or `skills/`.
-
 ## Rules (agents)
 - Each agent is one file at `agents/<agent-name>.md` with YAML frontmatter plus a system prompt body.
 - **Required frontmatter**: `name` (kebab-case, matches the filename stem) and `description` (one sentence, action-oriented — Claude Code auto-selects agents by matching this against the current task).
@@ -9,7 +7,7 @@
 - One agent, one responsibility. If an agent has two distinct jobs, split it into two agents. Narrow scope + precise `description` is what makes auto-selection reliable.
 - State the tools the agent may use explicitly inside the body (e.g. "You have access to Read, Write, Edit, Glob, Grep, Bash, WebSearch, WebFetch."). Don't rely on implicit tool sets.
 - Cross-agent references use bare agent names (e.g. "hand off to director"), not plugin-namespaced paths — subagents keep their bare names even when the plugin is installed.
-- When editing an existing agent, preserve its contract with the others. `advisor` writes `CLAUDE.local.md` for `director` to consume (auto-loaded by Claude Code at session start; gitignored via `*.local.*`). `director` does not write to `CLAUDE.local.md` — it stores the live plan in git history via `plan:` empty commits, with the format documented in `skills/plan-management/SKILL.md`.
+- When editing an existing agent, preserve its contract with the others. `scaffolder` writes `CLAUDE.local.md` for `director` to consume (auto-loaded by Claude Code at session start; gitignored via `*.local.*`). `director` does not write to `CLAUDE.local.md` — it stores the live plan in git history via `plan:` empty commits, with the format documented in `skills/plan-management/SKILL.md`.
 - After any edit to `agents/*.md`, verify the plugin still loads: `claude --plugin-dir ./` then `/agents` — all expected agents must appear.
 
 ## Rules (skills)

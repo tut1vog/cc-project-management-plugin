@@ -1,7 +1,5 @@
 # MCP configuration
 
-**When to read this**: read before editing `.mcp.json` or changing MCP server configuration.
-
 ## Rules
 - The plugin ships exactly one MCP server: `skillex`, sourced from `github:tut1vog/skillex-mcp` via `npx -y`.
 - **Source is GitHub, not npm.** `skillex-mcp` is not published to the npm registry. `npx -y github:tut1vog/skillex-mcp` relies on the `prepare` script in `skillex-mcp`'s `package.json` to run `tsc` and produce `dist/index.js` at install time. If that repo ever removes its `prepare` script or drops `devDependencies.typescript`, this plugin's MCP server breaks. Do not switch to `npx -y skillex-mcp` until the package is actually on npm.
