@@ -1,6 +1,7 @@
 ---
 name: prior-art-research
 description: Use external prior art — GitHub issues, Stack Overflow, library changelogs, vendor advisories, official docs, technical blog posts — to inform a non-trivial technical decision: diagnosing a complex bug, choosing a library or pattern, researching how others implement a similar feature, or weighing architectural alternatives. Produces a structured findings report. Skip when the answer is obvious from local source, when the decision is trivial, or when project precedent already settles it. Triggers on "diagnose", "root cause", "investigate the bug", "research how to", "find prior art", "compare libraries", "is there a pattern for".
+user-invocable: false
 ---
 
 A skill for **research-driven investigation**: gather local evidence, optionally consult external prior art, and emit a structured findings report. Used by the `investigator` agent and available to any agent that needs to research a technical question before acting.

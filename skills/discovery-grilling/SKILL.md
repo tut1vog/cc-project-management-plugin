@@ -1,6 +1,7 @@
 ---
 name: discovery-grilling
 description: Refuse vague answers and probe cross-phase contradictions during scaffolder's Discovery interview, until each substantive answer is precise enough that director can plan against it without asking back. Loaded explicitly at the start of Discovery Phases 1, 2, 3, and 6 — the phases where a sloppy answer corrupts the Requirements Summary. Triggers on "discovery grilling", "grill discovery", "grill the user", "interrogate the answer".
+user-invocable: false
 ---
 
 A grilling procedure for scaffolder's Discovery interview. The bar is a Requirements Summary precise enough that director can decompose each item into a phase plan without asking the user back. Discovery is the one shot to spend research budget — searches done here amortize across every task director executes.

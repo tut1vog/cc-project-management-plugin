@@ -1,6 +1,7 @@
 ---
 name: project-scaffolding
 description: Read the canonical layout for Claude Code project scaffolding (CLAUDE.md, CLAUDE.local.md, rule files, settings.local.json) and (for scaffolder only) write that scaffolding from an approved Requirements Summary. Use when you need to know the structure of a scaffolded project's instruction files, the overwrite/git-bootstrap policy, or the Requirements Summary input contract. Triggers on "project scaffolding", "CLAUDE.md template", "rule file template", "director permissions schema", "requirements summary contract".
+user-invocable: false
 ---
 
 This skill is the canonical spec for Claude Code project scaffolding — the files scaffolder writes after Discovery so director and other agents have a stable starting point.
