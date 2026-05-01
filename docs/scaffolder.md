@@ -8,6 +8,7 @@ A senior Claude Code specialist agent that sets up Claude Code for a project or 
 - Surfaces gaps in Claude Code setup, conventions, and dependency health when prior state exists
 - Validates tech choices and dependency maintenance status via WebSearch
 - Walks through structured discovery — leading with what was read when prior state exists, asking open-ended when it does not
+- Grills in Phases 1, 2, 3, and 6: refuses vague answers, probes cross-phase contradictions, searches to verify claims and resolve unknowns, and offers to park genuinely unknowable items as known-unknowns rather than letting them slip in vague
 - Captures the current project goal in Phase 2 (Scope) — this is what director will work toward
 - Consults the bundled `skill-catalog` skill during Phase 6 to surface pre-built skills (from Phase 0 findings and Discovery answers) as candidate features
 - Runs `git init` (if needed) and halts on a dirty tree before touching any files
@@ -91,4 +92,5 @@ Seven phases, asked one at a time. When Phase 0 found prior state, each phase le
 
 - **Let Phase 0 run.** The scaffolder reads everything silently first — this means fewer questions and more targeted advice on a project that has prior state.
 - **Be specific about scope.** The Scope you confirm in Phase 2 is the current goal director will work toward, so it pays to be precise about what's in versus out.
+- **Expect follow-ups in Phases 1, 2, 3, and 6.** Vague answers get one or two sharper follow-ups before the scaffolder offers to park the item as a known-unknown — the goal is a Requirements Summary precise enough that director can plan against it without asking back.
 - **You can say no.** The scaffolder proposes Claude Code features but doesn't force them. Decline anything that doesn't fit.
