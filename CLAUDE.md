@@ -1,6 +1,6 @@
 # cc-project-management-plugin
 
-A Claude Code plugin bundling three orchestration subagents (`scaffolder`, `director`, `investigator`) and three skills (`plan-management`, `project-scaffolding`, `skill-catalog`) — distributed as a single-plugin marketplace so users can install it globally with `/plugin install` instead of copying `.md` files into every project.
+A Claude Code plugin bundling three orchestration subagents (`scaffolder`, `director`, `investigator`) and four skills (`plan-management`, `project-scaffolding`, `skill-catalog`, `prior-art-research`) — distributed as a single-plugin marketplace so users can install it globally with `/plugin install` instead of copying `.md` files into every project.
 
 ## IMPORTANT
 Only update version in plugin.json when we make a new release 
@@ -26,7 +26,9 @@ Only update version in plugin.json when we make a new release
 │   ├── project-scaffolding/
 │   │   ├── SKILL.md
 │   │   └── references/     # hybrid rule templates filled from Discovery answers
-│   └── skill-catalog/
+│   ├── skill-catalog/
+│   │   └── SKILL.md
+│   └── prior-art-research/
 │       └── SKILL.md
 ├── bin/                    # executables added to the Bash tool's PATH while the plugin is enabled
 │   ├── plan-management     # stdlib Python: walks plan: chains, prints merged plan
@@ -63,6 +65,7 @@ Each rule file below is a focused behavioral contract. Read a rule file when its
 - `skills/plan-management/SKILL.md` — canonical format spec and read/write commands for the `plan:` and `Task:` journal commit messages director uses to store plan state in git history. Read it before editing director's plan/journal behavior or any agent that needs to inspect plan state.
 - `skills/project-scaffolding/SKILL.md` — canonical spec for the durable files scaffolder writes after Discovery (`CLAUDE.md`, `CLAUDE.local.md`, rule files, `.claude/settings.local.json`) plus the Requirements Summary input contract and reference template catalog. Read it before editing scaffolder's behavior, the file overwrite/git-bootstrap policy, or the rule reference templates.
 - `skills/skill-catalog/SKILL.md` — wraps `bin/skill-catalog`, the `gh`-backed helper that searches SKILL.md files in the trusted-repos list at `~/.claude/skill-repos.json` (default `["anthropics/skills"]`). Read it before editing scaffolder's catalog-consultation step or `bin/skill-catalog`.
+- `skills/prior-art-research/SKILL.md` — research-driven investigation procedure (Understand → Research → Synthesize) plus the unified findings-report format. The `investigator` agent loads it on every dispatch; any other agent can also load it when researching a non-trivial bug, library/pattern choice, feature design, or architectural decision. Read it before editing investigator's behavior or the report format.
 
 ## Permissions
 Director's permissions for this repo live in the maintainer's local `.claude/settings.local.json` (gitignored).
