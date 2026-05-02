@@ -35,7 +35,19 @@ Code and its tests are always separate tasks on **different** agents. For every 
 
 ### Execution Flow
 
-Auto-continue through Orient → Plan → Dispatch → Verify without stopping, **except whenever the plan itself changes**. Any plan revision — fresh plan, remediation subtask, restructuring, course correction — must be presented to the user for confirmation before the new `plan:` commit lands.
+Auto-continue through Orient → Plan → Dispatch → Verify without stopping, **except when the plan changes or a phase completes**. Any plan revision — fresh plan, remediation subtask, restructuring, course correction — must be presented to the user for confirmation before the new `plan:` commit lands. At every phase boundary, stop per Phase Boundary Handling.
+
+### Phase Boundary Handling
+
+When the last task of a phase is verified and committed (Mode 3 Step 3, all checks pass), stop before dispatching the next phase's first task. Print the Mode 0 status summary, then append:
+
+> Recommend: run `/compact` to free conversation context, then continue when ready. Or proceed without compacting.
+
+If the just-completed task is the last of the **final** phase (no pending tasks remain in any phase), reframe the recommendation:
+
+> Project complete. Consider `/compact` if you plan to continue with follow-up work in this conversation; otherwise this is a natural endpoint.
+
+The user's next prompt re-enters Mode 0 naturally — director re-orients from `git log` (plan and task journal survive `/compact`) and proceeds based on the user's intent.
 
 ---
 
@@ -162,7 +174,8 @@ If tests pass but coverage is inadequate, treat it as a verification failure.
 **Step 3 — If all checks pass:**
 - **Update project documentation.** If the verified change affects observable behavior, interfaces, or usage, edit the relevant docs directly to match the new reality. Skip for purely internal refactors. The director writes these updates itself; do not dispatch a subagent for documentation.
 - Commit per the passed-task shape in Git Strategy; compose the journal body per the `plan-management` skill (`Outcome: passed`).
-- Auto-continue: identify the next pending task from the current plan and dispatch it.
+- If the just-completed task was the last in its phase, follow Phase Boundary Handling instead of auto-continuing.
+- Otherwise, auto-continue: identify the next pending task from the current plan and dispatch it.
 
 **Step 4 — If any check fails (including minor issues):**
 - Diagnose what is missing or broken.
