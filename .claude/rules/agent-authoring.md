@@ -1,3 +1,9 @@
+---
+paths:
+  - agents/**
+  - skills/**
+---
+
 # Agent and skill authoring
 
 ## Rules (agents)

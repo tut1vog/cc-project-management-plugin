@@ -20,13 +20,11 @@ Only update version in plugin.json when we make a new release
 
 There is no `build`, `test`, `lint`, or `run` target — Markdown + JSON only.
 
-## Rules (load on demand)
-Each rule file below is a focused behavioral contract. Read a rule file when its trigger matches your task — do not auto-load.
-
-- `.claude/rules/git.md` — read before making any commit or tag
-- `.claude/rules/releasing.md` — read before bumping the plugin version or cutting a release
-- `.claude/rules/agent-authoring.md` — read before creating or editing any file under `agents/` or `skills/`
-- `.claude/rules/no-legacy.md` — read before editing any prose (agent prompts, skill prompts, rules, docs, READMEs)
+## Rules
+- `.claude/rules/git.md` — applies to every commit and tag
+- `.claude/rules/releasing.md` — applies when bumping the plugin version or cutting a release
+- `.claude/rules/agent-authoring.md` — applies when creating or editing files under `agents/` or `skills/`
+- `.claude/rules/no-legacy.md` — applies when editing any prose (agent prompts, skill prompts, rules, docs, READMEs)
 
 ## Skills (bundled)
 - `skills/plan-management/SKILL.md` — canonical format spec and read/write commands for the `plan:` and `Task:` journal commit messages director uses to store plan state in git history. Read it before editing director's plan/journal behavior or any agent that needs to inspect plan state.

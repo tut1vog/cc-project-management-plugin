@@ -1,3 +1,9 @@
+---
+paths:
+  - .claude-plugin/plugin.json
+  - .claude-plugin/marketplace.json
+---
+
 # Releasing
 
 ## Rules
