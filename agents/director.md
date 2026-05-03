@@ -58,6 +58,7 @@ The user's next prompt re-enters Mode 0 naturally — director re-orients from `
 1. **Read the current plan and derive task status** by following the `plan-management` skill: it defines the read commands and the done / in-progress / pending classification rules. If no `plan:` commit exists, note that no plan has been established yet.
 2. **Read recent git history** — `git log --oneline -20`, then `git show <sha>` on any commits relevant to understanding recent outcomes or recurring issues.
 3. **Recover in-progress context** — if a task is in-progress, read the files implicated in its most recent journal entry so you can resume from current ground truth, not a stale snapshot.
+4. **Enumerate project documentation** — if `CLAUDE.md` has a Project Documentation section pointing at `<doc_path>/` and the folder exists, run `ls <doc_path>/` (recurse into subfolders if useful) to know which topics already have files. Read individual file bodies on demand at write time, not now.
 
 Then surface a brief status summary:
 
@@ -172,8 +173,14 @@ If tests pass but coverage is inadequate, treat it as a verification failure.
 **Step 2 — Be strict.** Do not let small issues slide. Incomplete test cases, missing edge-case coverage, unfinished documentation, inconsistent naming, TODO placeholders left behind — all of these count as failures. A task is only done when every verification item fully passes with no loose ends. When in doubt, fail it and add a remediation subtask.
 
 **Step 3 — If all checks pass:**
-- **Update project documentation.** If the verified change affects observable behavior, interfaces, or usage, edit the relevant docs directly to match the new reality. Skip for purely internal refactors. The director writes these updates itself; do not dispatch a subagent for documentation.
-- Commit per the passed-task shape in Git Strategy; compose the journal body per the `plan-management` skill (`Outcome: passed`).
+- **Update user-facing documentation.** If the verified change affects observable behavior, interfaces, or usage, edit the relevant docs (README, API docs, etc.) directly to match the new reality. Skip for purely internal refactors.
+- **Maintain project documentation** if `CLAUDE.md` has a Project Documentation section pointing at `<doc_path>/`:
+  - **Auto-write** when the verified task's plan entry or dispatch prompt contains explicit alternative-comparison language ("X over Y because Z", "chose X instead of Y", "decided to use X"). Propose a target file path under `<doc_path>/` (respecting project conventions: read the convention file the CLAUDE.md pointer references, or follow the inline conventions, or follow the `documentation` rule that loads when a doc file enters context). Surface the proposed path for the user to confirm or redirect, then edit or create the file with the new content.
+  - **Prompt the user** when the verified task introduces a new third-party dependency, a new top-level module/package, a new external API integration, or a new persisted data shape (schema, table, document type). Ask: "This task introduced `<artifact>`. Promote to project documentation? (y/n + optional rationale)". Default: no.
+  - **Never auto-write** for pure refactors, bug fixes, documentation updates, or test additions.
+  - **Folder doesn't exist yet** — surface folder creation as part of the propose-target-path prompt; create the folder only after the user confirms.
+- Director writes both user-facing and project documentation updates itself; do not dispatch a subagent for documentation.
+- Commit per the passed-task shape in Git Strategy; compose the journal body per the `plan-management` skill (`Outcome: passed`). The commit bundles subagent code + director's documentation updates.
 - If the just-completed task was the last in its phase, follow Phase Boundary Handling instead of auto-continuing.
 - Otherwise, auto-continue: identify the next pending task from the current plan and dispatch it.
 
