@@ -22,9 +22,27 @@ If either is false, **stop** and direct the user to invoke scaffolder — the pr
 
 ## File-system mental model
 
-- `CLAUDE.md` — **long-term memory**: stack, commands, rules index. Committed.
+- `CLAUDE.md` — **long-term memory**: stack, commands, rules index, project documentation pointer. Committed.
 - `CLAUDE.local.md` — **short-term memory**: current goal + Discovery rationale (decisions, constraints, risks, decomposition hints, Discovery notes). Auto-loaded every turn; soft 200-line cap. Gitignored via `*.local.*`. Disposable — re-run scaffolder for the next goal.
 - `.claude/local/` — **spillover** for `CLAUDE.local.md` overflow; lowest-importance sections move here and `CLAUDE.local.md` keeps a 2–3 line summary + pointer. Director reads on demand. Gitignored explicitly (the `*.local.*` glob doesn't match bare folder names). See **Spillover when CLAUDE.local.md exceeds 200 lines** below.
+- `<doc_path>/` (project documentation folder when present — `doc/`, `docs/`, etc.) — durable, project-describing content. Located via the Project Documentation pointer in `CLAUDE.md`. Never written at scaffold time.
+
+## Project documentation folder
+
+The Project Documentation section in `CLAUDE.md` takes one of three shapes (or is omitted entirely if the project opts out):
+
+| Probe result at scaffold time | Shape |
+|---|---|
+| Doc folder exists, convention file detected | **A** — pointer to existing folder + convention file |
+| Doc folder exists, no convention file (folder may have content or be empty) | **A** (default; folder content read ad hoc) — or **B** / **C** if the user opts in to capturing conventions |
+| No doc folder | **B** / **C** / opt-out per Discovery |
+
+Threshold for B vs C:
+
+- Conventions ≤10 lines of markdown → **Shape B**: inline in `CLAUDE.md`'s Project Documentation section.
+- Conventions >10 lines → **Shape C**: write `.claude/rules/documentation.md` with `paths: [<doc_path>/**]` frontmatter so it loads only when a doc file enters context; `CLAUDE.md` keeps the one-line pointer.
+
+The `<doc_path>/` folder itself is never touched at scaffold time — no files are created or overwritten there.
 
 ## Requirements Summary input contract
 
@@ -43,6 +61,7 @@ Scaffolder's Discovery produces this summary at the end of its interview phases.
 **Team / workflow**: <size, roles, branching, CI>
 **Commit convention**: <Conventional Commits, or alternative structured-prefix convention>
 **License**: <which and why>
+**Project documentation**: <one of: "<doc_path>/ — Shape A (existing, convention file: <path>)" | "<doc_path>/ — Shape A (existing, no convention file)" | "<doc_path>/ — Shape B (new, inline conventions)" | "<doc_path>/ — Shape C (new, conventions in rule file)" | "opted out">
 **Known unknowns**: <open questions about this goal>
 
 **Files I will write or overwrite in Scaffold**:
@@ -51,8 +70,9 @@ Scaffolder's Discovery produces this summary at the end of its interview phases.
   - Spillover files (only listed when CLAUDE.local.md exceeds 200 lines and a section spills):
     - `.claude/local/<section>.md` — <create | overwrite>
   - Rule files:
-    - `.claude/rules/<file>.md` — trigger: "<one-line trigger>" — <create | overwrite | from reference: <id>>
+    - `.claude/rules/<file>.md` — scope: "<one-line scope>" — <create | overwrite | from reference: <id>>
     - <repeat for each>
+    - `.claude/rules/documentation.md` — scope: "<doc_path>/**" — create  (only when Project documentation Shape C)
   - `.claude/settings.local.json` (or `.claude/settings.json` if user opted for committed permissions) — <create | overwrite>
 
 **Director permissions** — proposed JSON to be written verbatim:
@@ -76,6 +96,11 @@ Scaffolder's Discovery produces this summary at the end of its interview phases.
 <filename: .claude/local/<section>.md>
 
 <full body for that section>
+```
+
+**Project documentation conventions** — only present for Shape B and C; the conventions to be written verbatim into `CLAUDE.md`'s Project Documentation section (Shape B) or into `.claude/rules/documentation.md` (Shape C):
+```markdown
+<bullets or prose capturing the project's documentation conventions>
 ```
 ````
 
@@ -162,16 +187,27 @@ Write exactly this structure:
 - Lint:  `<cmd>`
 - Run:   `<cmd>`
 
-## Rules (load on demand)
-Each rule file below is a focused behavioral contract. Read a rule file when its trigger matches your task — do not auto-load.
+## Rules
+- `.claude/rules/<file>.md` — <one-line scope, e.g. "applies to every commit">
 
-- `.claude/rules/<file>.md` — <one-line trigger, e.g. "read before making any commit">
+## Project Documentation
+<Section content depends on what was discovered or decided in Discovery — see **Project documentation folder** in this skill. Three shapes; pick the one that applies, or omit the section entirely if the project opted out of director-maintained documentation.
+
+Shape A — existing doc folder (with or without convention file):
+> Project documentation lives at `<doc_path>/`. Before writing or editing files there, read existing files (especially `<convention_file>` if present) to match the project's existing structure, naming, and style. Do not overwrite human-authored content.
+
+Shape B — new project, conventions short enough to inline (≤10 lines):
+> Project documentation lives at `<doc_path>/`. Conventions:
+> - <bullet>
+> - <bullet>
+> Do not overwrite human-authored content.
+
+Shape C — new project, conventions too long to inline (>10 lines):
+> Project documentation lives at `<doc_path>/`. Conventions documented in `.claude/rules/documentation.md` (path-scoped to `<doc_path>/**`). Do not overwrite human-authored content.>
 
 ## Planning Context
 For the current goal and known unknowns, see `CLAUDE.local.md` (auto-loaded by Claude Code; gitignored).
 ```
-
-Don't maintain a directory tree in `CLAUDE.md` — `tree` / `Glob` reveals it on demand. Operationally load-bearing paths (e.g. "`bin/` is on PATH while the plugin is enabled") and operational constraints (compliance, SLA targets, compatibility commitments) belong in focused rule files with their own triggers, not in `CLAUDE.md`.
 
 ## CLAUDE.local.md template
 
@@ -228,6 +264,12 @@ The spillover file holds the full section body — same heading and bullet struc
 ## Rule file template
 
 ```markdown
+---
+paths:                 # Optional: list of globs scoping when the rule loads. Omit for rules that should auto-load every session.
+  - <glob>
+  - <glob>
+---
+
 # <Rule title>
 
 ## Rules
@@ -239,6 +281,8 @@ The spillover file holds the full section body — same heading and bullet struc
 ```
 
 Pull concrete content from Phase 0 findings and Discovery answers. Each rule must stand alone — a reader who opens only that file must know what to do.
+
+A rule file without `paths:` frontmatter auto-loads every session (use for broadly-applicable rules like commit hygiene). A rule with `paths:` loads only when a matching file enters context (use for narrowly-scoped rules so they don't pay an always-loaded token cost).
 
 ## Director permissions interview structure
 
