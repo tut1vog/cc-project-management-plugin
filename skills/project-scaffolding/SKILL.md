@@ -29,18 +29,17 @@ If either is false, **stop** and direct the user to invoke scaffolder — the pr
 
 ## Project documentation folder
 
-The Project Documentation section in `CLAUDE.md` takes one of three shapes (or is omitted entirely if the project opts out):
+When project documentation isn't opted out, scaffolder writes a one-line pointer in `CLAUDE.md` and a path-scoped `.claude/rules/documentation.md` rule (`paths: [<doc_path>/**]` so it loads only when a doc file enters context). Conventions live in the rule.
 
-| Probe result at scaffold time | Shape |
-|---|---|
-| Doc folder exists, convention file detected | **A** — pointer to existing folder + convention file |
-| Doc folder exists, no convention file (folder may have content or be empty) | **A** (default; folder content read ad hoc) — or **B** / **C** if the user opts in to capturing conventions |
-| No doc folder | **B** / **C** / opt-out per Discovery |
+Default rule body templates (scaffolder picks one and offers it to the user during Discovery):
 
-Threshold for B vs C:
+- **Convention file detected** at `<doc_path>/<convention_file>`:
 
-- Conventions ≤10 lines of markdown → **Shape B**: inline in `CLAUDE.md`'s Project Documentation section.
-- Conventions >10 lines → **Shape C**: write `.claude/rules/documentation.md` with `paths: [<doc_path>/**]` frontmatter so it loads only when a doc file enters context; `CLAUDE.md` keeps the one-line pointer.
+  > Project documentation conventions live in `<doc_path>/<convention_file>`. Match the existing structure and naming. Do not overwrite human-authored content.
+
+- **No convention file detected** (or no existing folder):
+
+  > Project documentation lives at `<doc_path>/`. Match the structure and naming of any existing files there. Do not overwrite human-authored content.
 
 The `<doc_path>/` folder itself is never touched at scaffold time — no files are created or overwritten there.
 
@@ -61,7 +60,7 @@ Scaffolder's Discovery produces this summary at the end of its interview phases.
 **Team / workflow**: <size, roles, branching, CI>
 **Commit convention**: <Conventional Commits, or alternative structured-prefix convention>
 **License**: <which and why>
-**Project documentation**: <one of: "<doc_path>/ — Shape A (existing, convention file: <path>)" | "<doc_path>/ — Shape A (existing, no convention file)" | "<doc_path>/ — Shape B (new, inline conventions)" | "<doc_path>/ — Shape C (new, conventions in rule file)" | "opted out">
+**Project documentation**: <one of: "documented at <doc_path>/" | "opted out">
 **Known unknowns**: <open questions about this goal>
 
 **Files I will write or overwrite in Scaffold**:
@@ -72,7 +71,7 @@ Scaffolder's Discovery produces this summary at the end of its interview phases.
   - Rule files:
     - `.claude/rules/<file>.md` — scope: "<one-line scope>" — <create | overwrite | from reference: <id>>
     - <repeat for each>
-    - `.claude/rules/documentation.md` — scope: "<doc_path>/**" — create  (only when Project documentation Shape C)
+    - `.claude/rules/documentation.md` — scope: "<doc_path>/**" — create  (only when Project documentation isn't opted out)
   - `.claude/settings.local.json` (or `.claude/settings.json` if user opted for committed permissions) — <create | overwrite>
 
 **Director permissions** — proposed JSON to be written verbatim:
@@ -98,10 +97,6 @@ Scaffolder's Discovery produces this summary at the end of its interview phases.
 <full body for that section>
 ```
 
-**Project documentation conventions** — only present for Shape B and C; the conventions to be written verbatim into `CLAUDE.md`'s Project Documentation section (Shape B) or into `.claude/rules/documentation.md` (Shape C):
-```markdown
-<bullets or prose capturing the project's documentation conventions>
-```
 ````
 
 ## Scaffold procedure
@@ -191,19 +186,9 @@ Write exactly this structure:
 - `.claude/rules/<file>.md` — <one-line scope, e.g. "applies to every commit">
 
 ## Project Documentation
-<Section content depends on what was discovered or decided in Discovery — see **Project documentation folder** in this skill. Three shapes; pick the one that applies, or omit the section entirely if the project opted out of director-maintained documentation.
+<Omit this section entirely if the project opted out of director-maintained documentation. Otherwise:>
 
-Shape A — existing doc folder (with or without convention file):
-> Project documentation lives at `<doc_path>/`. Before writing or editing files there, read existing files (especially `<convention_file>` if present) to match the project's existing structure, naming, and style. Do not overwrite human-authored content.
-
-Shape B — new project, conventions short enough to inline (≤10 lines):
-> Project documentation lives at `<doc_path>/`. Conventions:
-> - <bullet>
-> - <bullet>
-> Do not overwrite human-authored content.
-
-Shape C — new project, conventions too long to inline (>10 lines):
-> Project documentation lives at `<doc_path>/`. Conventions documented in `.claude/rules/documentation.md` (path-scoped to `<doc_path>/**`). Do not overwrite human-authored content.>
+> Project documentation lives at `<doc_path>/`. Conventions in `.claude/rules/documentation.md` (loads when a doc file enters context). Do not overwrite human-authored content.
 
 ## Planning Context
 For the current goal and known unknowns, see `CLAUDE.local.md` (auto-loaded by Claude Code; gitignored).

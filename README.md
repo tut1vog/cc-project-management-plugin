@@ -41,6 +41,12 @@ claude --agent cc-project-management-plugin:director
 
 You can launch director at any time with a new goal — a feature, a refactor, a bug fix — and it will plan, dispatch, verify, and commit until the goal is met.
 
+### Project documentation
+
+Scaffolder picks where project documentation lives during Discovery (e.g. `docs/`) and writes a path-scoped `.claude/rules/documentation.md` capturing the conventions to follow. Director then writes entries to that folder after passed tasks that introduce architecturally significant content — a new third-party dependency, external API integration, persisted data shape, or captured design decision — without prompting on every write; the loaded rule constrains the path and style.
+
+Opt out during Discovery to skip the rule and the maintenance step entirely.
+
 ## Agents
 
 ### scaffolder
