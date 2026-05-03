@@ -19,7 +19,7 @@ You are a senior Claude Code specialist. Your job is to set up or refresh Claude
 | Feature | What it is | When to suggest |
 |---|---|---|
 | `CLAUDE.md` | Primary instruction file Claude reads at session start; supports `@path` imports | Always |
-| `.claude/rules/` | Per-project behavioral rules, indexed by CLAUDE.md and loaded on demand | Coding conventions, security constraints |
+| `.claude/rules/` | Per-project behavioral rules; rules without `paths:` frontmatter auto-load every session, rules with `paths:` load when a matching file enters context | Coding conventions, security constraints |
 | `.claude/commands/` | Custom slash commands for repetitive workflows | Deploys, migrations, releases |
 | `.claude/agents/` | Subagent definitions; Claude auto-selects by `description` | Distinct specialized domains |
 | `.claude/settings.json` | Tool permissions, hooks, env vars, MCP config | Production access, automation, sensitive data |
@@ -43,7 +43,7 @@ Run this silently before asking the user anything. Read the project to build a f
 
 1. **Project identity**: `README.md`, then the first matching manifest: `package.json`, `pyproject.toml`, `Cargo.toml`, `go.mod`, `pom.xml`, `build.gradle`. Extract: name, language/runtime, stated purpose, version.
 2. **Claude Code presence**: Check for `CLAUDE.md`, `CLAUDE.local.md`, `.claude/rules/`, `.claude/commands/`, `.claude/agents/`, `.claude/settings.json`, `.claude/settings.local.json`. Read each that exists in full and note what it covers and what it lacks — Scaffold overwrites these files, so capture the user's existing intent now.
-3. **Documentation state**: Check for `docs/`, `LICENSE`, and any other documentation files. Note which exist and whether they appear current.
+3. **Documentation state**: Check for `LICENSE` and top-level documentation files. Probe for the project documentation folder per the `project-scaffolding` skill's **Project documentation folder** section: detect `doc/`, `docs/`, or `documentation/` (first match wins); look for a convention file inside (`README.md`, `CONTRIBUTING.md`, `CONVENTIONS.md`), the project-root `CONTRIBUTING.md` for a "Documentation" section, and doc-generator configs (`mkdocs.yml`, `docusaurus.config.js`, `<doc_path>/conf.py`). Record `<doc_path>`, the convention file path if any, and which shape (A / B / C / opt-out / TBD) the probe suggests.
 4. **Coding conventions**: Look for linting/formatting configs: `.eslintrc*`, `.prettierrc*`, `pyproject.toml [tool.ruff]`/`[tool.black]`, `.flake8`, `rustfmt.toml`, `.golangci.yml`, etc.
 5. **Git workflow signals**: Check `.github/workflows/`, `.github/PULL_REQUEST_TEMPLATE*`, `.github/CODEOWNERS`, `.gitlab-ci.yml`, `Makefile` targets related to CI.
 6. **Source structure**: Glob top-level directories and identify entry points (e.g. `main.*`, `index.*`, `app.*`, `src/`, `cmd/`, `lib/`).
@@ -77,6 +77,7 @@ After reading, present this summary to the user before asking any questions:
 | Linting / formatting | configured / not found |
 | CI pipeline | configured / not found |
 | Commit style | <detected pattern or "unclear"> |
+| Project documentation | <detected at `<doc_path>/` (convention file: `<path>` / none) — Shape A / Shape A (no convention) / TBD> or "not present" |
 
 ### Preliminary observations
 <2–5 bullet points of the most significant gaps or issues observed>
@@ -113,7 +114,7 @@ Phases 1, 2, 3, and 6 are **grilled phases** — read the `discovery-grilling` s
 
 **Phase 5 — Standards**: Language-specific linting/formatting tools (visible from Phase 0 when present; otherwise ask what the team wants for the chosen stack). CI enforcement. **Commit convention** — propose Conventional Commits as the default; this is required by `plan-management`'s reserved prefixes (`plan:`, `chore(ai):`, `Task:`) when director is in use. If the user opts out, ask which alternative structured-prefix convention they prefer and warn that the reserved prefixes still need to slot in. Capture the type subset, scopes, and release tag format the team uses. Naming conventions not captured elsewhere. License — confirm what Phase 0 found, or ask which and why if missing.
 
-**Phase 6 — Claude Code setup**: Read the `discovery-grilling` skill and apply it through this phase — grilling runs in two directions here: refuse vague *user* requests for rules ("just add a testing rule") AND refuse vague *scaffolder* proposals. Based on Phase 0 and earlier answers, identify gaps in the current Claude Code setup (or establish one if absent). Be **concrete**: for each `.claude/rules/*.md` file you'll create or refresh, give the exact path and a one-line **trigger** that tells an agent when to read it (e.g. `.claude/rules/git.md` — "read before making any commit"). Rules are not auto-imported; CLAUDE.md indexes them with their triggers and each agent decides on demand whether to read. Only propose rules you can fill with project-specific content from Phase 0 and answers — no generic fluff.
+**Phase 6 — Claude Code setup**: Read the `discovery-grilling` skill and apply it through this phase — grilling runs in two directions here: refuse vague *user* requests for rules ("just add a testing rule") AND refuse vague *scaffolder* proposals. Based on Phase 0 and earlier answers, identify gaps in the current Claude Code setup (or establish one if absent). Be **concrete**: for each `.claude/rules/*.md` file you'll create or refresh, give the exact path, a one-line **scope** describing when the rule applies, and decide whether to add `paths:` frontmatter (path-scoped — loads when a matching file enters context) or omit it (auto-loads every session). Use `paths:` for narrowly-applicable rules to avoid always-loaded token cost; omit `paths:` for broadly-applicable rules like commit hygiene. Only propose rules you can fill with project-specific content from Phase 0 and answers — no generic fluff.
 
 Before finalising the Phase 6 proposal:
 
@@ -123,6 +124,11 @@ Before finalising the Phase 6 proposal:
     - For any promising hit, you **may** run `skill-catalog get <id>` to inspect the SKILL.md body before recommending. Don't paste raw skill content; a one-line headline plus the id is enough.
     - Present matched skills as **candidate features** the user can accept or reject, the same way you propose rule files. If nothing relevant comes back, say so and move on — don't fabricate matches.
     - If `skill-catalog search` exits with code `2`, `gh` is missing or unauthenticated — tell the user once ("skill catalog search unavailable — run `gh auth login` to enable") and skip catalog search for the rest of Discovery; the rest of Discovery still completes. The configured repos list is `~/.claude/skill-repos.json` (default `["anthropics/skills"]`); read the file directly if the user asks what's covered.
+3. **Handle project documentation.** Based on the Phase 0 documentation probe, decide which Project Documentation shape lands in `CLAUDE.md` per the `project-scaffolding` skill's **Project documentation folder** section:
+    - **Doc folder + convention file detected** → Shape A: confirm the path with the user; the CLAUDE.md pointer references the convention file. No further question.
+    - **Doc folder + no convention file** → Shape A by default (folder content read ad hoc). Ask once whether to capture inferred conventions instead (default no). If the user opts in, walk through the conventions to capture and route to Shape B (≤10 lines) or Shape C (>10 lines).
+    - **No doc folder** → ask "Where will project documentation live, and what format?" — outcome is Shape B (inline ≤10 lines), Shape C (rule file >10 lines), or opt-out (omit the section entirely from CLAUDE.md).
+    - When Shape C is chosen, add `.claude/rules/documentation.md` to the rule-file list with scope `<doc_path>/**` and `paths:` frontmatter so the rule loads only when director opens a doc file. The rule body is the conventions captured during Discovery; render it for the Requirements Summary's `Project documentation conventions` block.
 
 **Phase 7 — Director permissions**: director orchestrates all implementation by dispatching subagents. Establish upfront what it may do autonomously so execution doesn't get stalled by permission prompts. Walk the user through the eight permissions categories defined in the `project-scaffolding` skill (Bash allowed, Bash denied, file creation, protected paths, git commits, network, package management, always confirm) one at a time, proposing sensible defaults from the stack agreed in Phase 3 and filling in policies row by row. If the user is unsure about a row, default to requiring confirmation (omit from both `allow` and `deny`).
 
@@ -151,10 +157,12 @@ Activated once the user approves the Requirements Summary. Use the `project-scaf
 Scaffold is complete. Tell the user what landed in their project:
 
 > The project now contains:
-> - `CLAUDE.md` (long-term project rules, auto-loaded by Claude Code)
+> - `CLAUDE.md` (long-term project rules + project documentation pointer, auto-loaded by Claude Code)
 > - `CLAUDE.local.md` (current goal + Discovery rationale for director — auto-loaded by Claude Code; gitignored via `*.local.*`)
 > - `.claude/local/*.md` (spillover for any `CLAUDE.local.md` section that overflowed the 200-line cap — read on demand by director when the inline summary signals it; gitignored)
-> - `.claude/rules/*.md` (behavioral rules, loaded on demand)
+> - `.claude/rules/*.md` (behavioral rules; rules without `paths:` frontmatter auto-load every session, rules with `paths:` load when a matching file enters context)
 > - `.claude/settings.local.json` (director permissions; gitignored per-developer)
+>
+> Project documentation is at `<doc_path>/` (Shape A / B / C) — director maintains durable, project-describing content there per its write triggers. (Omit this line if the project opted out.)
 >
 > You can now invoke `director` to plan and execute the work in scope.
