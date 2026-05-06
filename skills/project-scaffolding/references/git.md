@@ -27,7 +27,7 @@ Subagents dispatched by director never commit; director records all task outcome
 
 ## Project conventions
 
-<!-- scaffolder fills these from Phase 5 / Phase 0 answers; remove any line that doesn't apply -->
+<!-- fill these from Discovery answers; remove any line that doesn't apply -->
 
 - **Types in use**: <e.g. feat, fix, chore, docs, refactor, test, build, ci>
 - **Scopes**: <e.g. api, ui, db — or "none required">
@@ -51,4 +51,4 @@ feat: Added some improvements
 fix: bug
 ```
 
-<!-- scaffolder may add 1–2 project-specific examples below from git log observations -->
+<!-- add 1–2 project-specific examples below from git log observations if available -->

@@ -1,13 +1,13 @@
 # cc-project-management-plugin
 
-A Claude Code plugin bundling three orchestration subagents (`scaffolder`, `director`, `investigator`) and four skills (`plan-management`, `project-scaffolding`, `skill-catalog`, `prior-art-research`) — distributed as a single-plugin marketplace so users can install it globally with `/plugin install` instead of copying `.md` files into every project.
+A Claude Code plugin bundling two orchestration subagents (`director`, `investigator`) and four skills (`plan-management`, `project-scaffolding`, `skill-catalog`, `prior-art-research`) — distributed as a single-plugin marketplace so users can install it globally with `/plugin install` instead of copying `.md` files into every project.
 
 ## IMPORTANT
 Only update version in plugin.json when we make a new release 
 
 ## Stack
 - Language / runtime: **none at build time** — the repo is Markdown (agent definitions, rules, docs), JSON (plugin manifests), and a stdlib-only Python helper (`bin/skill-catalog`).
-- Runtime dependencies on consumer machines: **Python 3** (required by both `bin/` helpers) and the **`gh` CLI** authenticated via `gh auth login` (required only by `skill-catalog` for GitHub-backed catalog search; if absent, scaffolder skips catalog search and Discovery still completes).
+- Runtime dependencies on consumer machines: **Python 3** (required by both `bin/` helpers) and the **`gh` CLI** authenticated via `gh auth login` (required only by `skill-catalog` for GitHub-backed catalog search; if absent, the skill-catalog search step is skipped and Discovery still completes).
 - No compile step, no test suite, no dependency lockfiles.
 
 ## Canonical Commands
@@ -28,10 +28,9 @@ There is no `build`, `test`, `lint`, or `run` target — Markdown + JSON only.
 
 ## Skills (bundled)
 - `skills/plan-management/SKILL.md` — canonical format spec and read/write instructions for the `PLAN.md` file director maintains at the repo root. Read it before editing director's plan management behavior or any agent that needs to inspect plan state.
-- `skills/project-scaffolding/SKILL.md` — canonical spec for the files scaffolder writes after Discovery (`CLAUDE.md`, `CLAUDE.local.md`, optional `.claude/local/*.md` spillover when `CLAUDE.local.md` overflows its 200-line cap, rule files, `.claude/settings.local.json`) plus the Requirements Summary input contract, the `CLAUDE.local.md` template, the spillover mechanics, and the reference template catalog. Read it before editing scaffolder's behavior, the file overwrite/git-bootstrap policy, the spillover rules, or the rule reference templates.
-- `skills/skill-catalog/SKILL.md` — wraps `bin/skill-catalog`, the `gh`-backed helper that searches SKILL.md files in the trusted-repos list at `~/.claude/skill-repos.json` (default `["anthropics/skills"]`). Read it before editing scaffolder's catalog-consultation step or `bin/skill-catalog`.
+- `skills/project-scaffolding/SKILL.md` — context for setting up Claude Code in a project. Covers what information a scaffold requires (goal, stack, conventions, rules, permissions), what files a scaffolded project contains, and their templates. User-invocable. Read it before editing the Requirements Summary format, the spillover mechanics, or the reference template catalog.
+- `skills/skill-catalog/SKILL.md` — wraps `bin/skill-catalog`, the `gh`-backed helper that searches SKILL.md files in the trusted-repos list at `~/.claude/skill-repos.json` (default `["anthropics/skills"]`). Read it before editing the catalog-consultation step in project-scaffolding or `bin/skill-catalog`.
 - `skills/prior-art-research/SKILL.md` — research-driven investigation procedure (Understand → Research → Synthesize) plus the unified findings-report format. The `investigator` agent loads it on every dispatch; any other agent can also load it when researching a non-trivial bug, library/pattern choice, feature design, or architectural decision. Read it before editing investigator's behavior or the report format.
-- `skills/discovery-grilling/SKILL.md` — grilling procedure scaffolder applies in Discovery Phases 1, 2, 3, and 6: five vagueness diagnostics, the director-plan termination bar, cross-phase contradiction probing, and park-it mechanics. Read it before editing scaffolder's grilling behavior or how grilling interacts with park-it / Requirements Summary known-unknowns.
 
 ## Permissions
 Director's permissions for this repo live in the maintainer's local `.claude/settings.local.json` (gitignored).

@@ -1,51 +1,37 @@
 ---
 name: project-scaffolding
-description: Read the canonical layout for Claude Code project scaffolding (CLAUDE.md, CLAUDE.local.md, rule files, settings.local.json) and (for scaffolder only) write that scaffolding from an approved Requirements Summary. Use when you need to know the structure of a scaffolded project's instruction files, the overwrite/git-bootstrap policy, or the Requirements Summary input contract. Triggers on "project scaffolding", "CLAUDE.md template", "rule file template", "director permissions schema", "requirements summary contract".
-user-invocable: false
+description: Context for setting up or refreshing Claude Code in a project. Covers what information a scaffold requires (goal, stack, conventions, rules, permissions), what files a scaffolded project contains, and their templates. Load before asking to scaffold a project, set a new goal, or be grilled about project setup.
+user-invocable: true
 ---
 
-This skill is the canonical spec for Claude Code project scaffolding — the files scaffolder writes after Discovery so director and other agents have a stable starting point.
+This skill is the canonical context for Claude Code project setup. It describes what information a scaffold requires, what files result, and what those files look like.
 
-## Who writes / who reads
+## What a scaffold requires
 
-- **Scaffolder writes** — only it executes the scaffold procedure, and only after the user approves a Requirements Summary.
-- **Anyone reads** — any agent or rule may consult this skill for templates, schemas, and contracts.
+A complete scaffold is based on five topics:
 
-## Procedure preconditions (hard gate)
+1. **Goal** — what the agent should achieve in this iteration. Specific enough to decompose into a phase plan: names deliverables, scope boundaries, and known constraints. Goes into `CLAUDE.local.md`.
+2. **Stack** — language, runtime, key frameworks, deployment target. Goes into `CLAUDE.md`.
+3. **Conventions** — commit style (Conventional Commits when `plan-management` is in use, for its reserved prefixes `plan:`, `chore(ai):`, `Task:`), linting/formatting tools, naming conventions, license.
+4. **Rules** — which `.claude/rules/*.md` files to create. Each rule has a one-line scope and either `paths:` frontmatter (loads when a matching file enters context) or none (auto-loads every session).
+5. **Permissions** — what the agent may do autonomously. See **Director permissions** below.
 
-Before executing any step in the **Scaffold procedure** below, confirm:
+## A scaffolded project
 
-1. You are scaffolder.
-2. The user has explicitly approved a Requirements Summary in the current session, in the shape defined by **Requirements Summary input contract**.
+A scaffolded project contains:
 
-If either is false, **stop** and direct the user to invoke scaffolder — the procedure overwrites files without prompting and is not safe to fire from any other context.
+- `CLAUDE.md` — long-term memory: stack, commands, rules index, project documentation pointer. Committed.
+- `CLAUDE.local.md` — short-term memory: current goal and Discovery rationale. Auto-loaded every turn; soft 200-line cap. Gitignored via `*.local.*`.
+- `.claude/local/` — spillover for `CLAUDE.local.md` overflow; lowest-importance sections move here, with `CLAUDE.local.md` keeping a 2–3 line summary and pointer. Gitignored explicitly (the `*.local.*` glob doesn't match bare folder names).
+- `.claude/rules/*.md` — one rule file per topic.
+- `.claude/settings.local.json` — director permissions (gitignored; `.claude/settings.json` if the user opts for committed permissions).
+- `.gitignore` — contains `*.local.*` and `.claude/local/`.
 
-## File-system mental model
+When a project documentation folder exists (`doc/`, `docs/`, etc.), `CLAUDE.md` carries a one-line pointer to it and `.claude/rules/documentation.md` governs it (path-scoped to `<doc_path>/**`). The folder itself is never created or modified during scaffolding.
 
-- `CLAUDE.md` — **long-term memory**: stack, commands, rules index, project documentation pointer. Committed.
-- `CLAUDE.local.md` — **short-term memory**: current goal + Discovery rationale (decisions, constraints, risks, decomposition hints, Discovery notes). Auto-loaded every turn; soft 200-line cap. Gitignored via `*.local.*`. Disposable — re-run scaffolder for the next goal.
-- `.claude/local/` — **spillover** for `CLAUDE.local.md` overflow; lowest-importance sections move here and `CLAUDE.local.md` keeps a 2–3 line summary + pointer. Director reads on demand. Gitignored explicitly (the `*.local.*` glob doesn't match bare folder names). See **Spillover when CLAUDE.local.md exceeds 200 lines** below.
-- `<doc_path>/` (project documentation folder when present — `doc/`, `docs/`, etc.) — durable, project-describing content. Located via the Project Documentation pointer in `CLAUDE.md`. Never written at scaffold time.
+## Requirements Summary
 
-## Project documentation folder
-
-When project documentation isn't opted out, scaffolder writes a one-line pointer in `CLAUDE.md` and a path-scoped `.claude/rules/documentation.md` rule (`paths: [<doc_path>/**]` so it loads only when a doc file enters context). Conventions live in the rule.
-
-Default rule body templates (scaffolder picks one and offers it to the user during Discovery):
-
-- **Convention file detected** at `<doc_path>/<convention_file>`:
-
-  > Project documentation conventions live in `<doc_path>/<convention_file>`. Match the existing structure and naming. Do not overwrite human-authored content.
-
-- **No convention file detected** (or no existing folder):
-
-  > Project documentation lives at `<doc_path>/`. Match the structure and naming of any existing files there. Do not overwrite human-authored content.
-
-The `<doc_path>/` folder itself is never touched at scaffold time — no files are created or overwritten there.
-
-## Requirements Summary input contract
-
-Scaffolder's Discovery produces this summary at the end of its interview phases. The user must approve it verbatim before the Scaffold procedure runs.
+The conversation that produces a scaffold converges on this document. It is approved before any files are written.
 
 ````
 ## Requirements Summary
@@ -63,16 +49,15 @@ Scaffolder's Discovery produces this summary at the end of its interview phases.
 **Project documentation**: <one of: "documented at <doc_path>/" | "opted out">
 **Known unknowns**: <open questions about this goal>
 
-**Files I will write or overwrite in Scaffold**:
+**Files to write or overwrite**:
   - `CLAUDE.md` — <create | overwrite>
   - `CLAUDE.local.md` — <create | overwrite>
-  - Spillover files (only listed when CLAUDE.local.md exceeds 200 lines and a section spills):
+  - Spillover files (only when CLAUDE.local.md exceeds 200 lines):
     - `.claude/local/<section>.md` — <create | overwrite>
   - Rule files:
     - `.claude/rules/<file>.md` — scope: "<one-line scope>" — <create | overwrite | from reference: <id>>
-    - <repeat for each>
-    - `.claude/rules/documentation.md` — scope: "<doc_path>/**" — create  (only when Project documentation isn't opted out)
-  - `.claude/settings.local.json` (or `.claude/settings.json` if user opted for committed permissions) — <create | overwrite>
+    - `.claude/rules/documentation.md` — scope: "<doc_path>/**" — create  (only when not opted out)
+  - `.claude/settings.local.json` (or `.claude/settings.json`) — <create | overwrite>
 
 **Director permissions** — proposed JSON to be written verbatim:
 ```json
@@ -87,7 +72,7 @@ Scaffolder's Discovery produces this summary at the end of its interview phases.
 
 **CLAUDE.local.md** — proposed body to be written verbatim:
 ```markdown
-<rendered CLAUDE.local.md body matching the CLAUDE.local.md template; if spillover applies, the spilled sections are inline summaries pointing at .claude/local/<section>.md, and the spilled bodies are listed below>
+<rendered CLAUDE.local.md body; if spillover applies, spilled sections are inline summaries pointing at .claude/local/<section>.md, and the spilled bodies are listed below>
 ```
 
 **Spillover bodies** — only present when CLAUDE.local.md exceeded 200 lines; one block per spilled section:
@@ -99,72 +84,7 @@ Scaffolder's Discovery produces this summary at the end of its interview phases.
 
 ````
 
-## Scaffold procedure
-
-### Step 1 — Ensure a git repository exists
-
-Run `git rev-parse --is-inside-work-tree` in the project root.
-
-- **Not a git repo**: run `git init`. If the tree has any files, `git add -A && git commit -m "chore: initial snapshot before Claude Code scaffolding"`.
-- **Git repo, dirty tree**: stop and ask the user to commit, stash, or abort. Only proceed after an explicit choice — that's what makes the overwrite-without-prompt policy safe.
-- **Git repo, clean tree**: proceed.
-
-Then ensure `.gitignore` contains both `*.local.*` and `.claude/local/` (the latter is needed because `*.local.*` doesn't match bare folder names):
-
-```bash
-grep -qxF '*.local.*'   .gitignore 2>/dev/null || echo '*.local.*'   >> .gitignore
-grep -qxF '.claude/local/' .gitignore 2>/dev/null || echo '.claude/local/' >> .gitignore
-```
-
-### Step 2 — Write `CLAUDE.md`
-
-Use the template in **CLAUDE.md template** below. Populate every section from the approved Requirements Summary. Overwrite any existing file.
-
-### Step 3 — Write `CLAUDE.local.md` and any spillover
-
-Write `CLAUDE.local.md` from the **CLAUDE.local.md** block in the Requirements Summary. If the summary includes **Spillover bodies**, also create `.claude/local/` and write each spilled section to its `.claude/local/<section>.md` path verbatim. Overwrite existing files.
-
-Verify `wc -l CLAUDE.local.md` ≤ 200; spill more if it overflows.
-
-### Step 4 — Write `.claude/rules/*.md`
-
-Create the `.claude/rules/` directory if missing. For every rule file listed in the approved Requirements Summary:
-
-- `from reference: <id>` entries: read `references/<id>.md` and fill its labelled slots from Discovery answers.
-- Other entries: use the **Rule file template** below, filled from Discovery answers.
-
-Each rule file must stand on its own (one screen, self-contained). Overwrite any existing file. Don't manufacture rules the user didn't specify.
-
-### Step 5 — Write `.claude/settings.local.json`
-
-Write the **Director permissions** JSON block verbatim to `.claude/settings.local.json` (or `.claude/settings.json` if the user opted in during Discovery). Validate:
-
-```bash
-python3 -m json.tool .claude/settings.local.json > /dev/null
-```
-
-### Step 6 — Print the Scaffold Summary
-
-Print a list of every file created or overwritten:
-
-```
-## Scaffold Summary
-Written / overwritten:
-- CLAUDE.md
-- CLAUDE.local.md
-- .claude/local/<section>.md       (only when spillover applied)
-- ...
-- .claude/rules/<file>.md
-- ...
-- .claude/settings.local.json
-
-Verify with: git status && git diff --stat
-(Gitignored files won't appear in git diff.)
-```
-
 ## CLAUDE.md template
-
-Write exactly this structure:
 
 ```markdown
 # <Project Name>
@@ -186,7 +106,7 @@ Write exactly this structure:
 - `.claude/rules/<file>.md` — <one-line scope, e.g. "applies to every commit">
 
 ## Project Documentation
-<Omit this section entirely if the project opted out of director-maintained documentation. Otherwise:>
+<Omit this section entirely if the project opted out. Otherwise:>
 
 > Project documentation lives at `<doc_path>/`. Conventions in `.claude/rules/documentation.md` (loads when a doc file enters context). Do not overwrite human-authored content.
 
@@ -196,62 +116,57 @@ For the current goal and known unknowns, see `CLAUDE.local.md` (auto-loaded by C
 
 ## CLAUDE.local.md template
 
-Write exactly this structure:
-
 ```markdown
 # <Project Name> — Current Goal
 
-> Short-term memory for the current goal. Long-term project facts (stack, commands, rules) live in `CLAUDE.md` and `.claude/rules/`. Director's phase/task plan and per-task outcomes live in git history; see the `plan-management` skill. When this goal is met, re-run scaffolder to dispose this file and scaffold a fresh one for the next goal.
+> Short-term memory for the current goal. Long-term project facts (stack, commands, rules) live in `CLAUDE.md` and `.claude/rules/`. Director's phase/task plan and per-task outcomes live in git history; see the `plan-management` skill. Load the `project-scaffolding` skill to set up a fresh goal for the next iteration.
 
 ## Goal
 <2–4 sentences describing what director should achieve in this iteration.>
 
 ## Out of scope
-<Optional — things that might come up but aren't part of this goal. Omit the section if there's nothing to list.>
+<Optional — things that might come up but aren't part of this goal. Omit the section if empty.>
 
 ## Known Unknowns
 <Open questions about this goal that may affect planning.>
 
 ## Decisions
-<What was chosen during Discovery and why, plus alternatives ruled out and why. One bullet per decision.>
+<What was chosen during Discovery and why, plus alternatives ruled out. One bullet per decision.>
 
 ## Constraints
-<Things the user explicitly said the goal must respect: deadlines, stakeholder asks, hard limits, things ruled out of scope for non-obvious reasons. One bullet each.>
+<Things the goal must respect: deadlines, stakeholder asks, hard limits, things ruled out for non-obvious reasons. One bullet each.>
 
 ## Risks & gotchas
-<Areas of the codebase or problem space the user flagged as fragile, surprising, or known to have bitten them. One bullet each, with enough context that director can act on it.>
+<Areas flagged as fragile, surprising, or known to have caused problems. One bullet each with enough context to act on.>
 
 ## Decomposition hints
-<Suggested phase split or sequencing the user surfaced during Discovery, with rationale. Director may override these — they are hints, not mandates.>
+<Suggested phase split or sequencing from Discovery, with rationale. Director may override — these are hints, not mandates.>
 
 ## Discovery notes
-<Catch-all: stakeholder context, prior attempts and why they were abandoned, domain vocabulary, anything else from Discovery director will benefit from that does not belong in CLAUDE.md / a rule file.>
+<Catch-all: stakeholder context, prior attempts, domain vocabulary, anything else director will benefit from that doesn't belong in CLAUDE.md or a rule file.>
 ```
 
-Write `_None_` as the entire section body for any section the Discovery did not produce material for. Do not omit sections — director relies on the uniform shape.
+Write `_None_` as the entire body for any section Discovery produced no material for. Do not omit sections — director relies on the uniform shape.
 
 ### Spillover when CLAUDE.local.md exceeds 200 lines
 
-When the populated body exceeds 200 lines, spill lowest-importance sections one at a time: the section in `CLAUDE.local.md` keeps a 2–3 line summary + pointer to `.claude/local/<section>.md`, and the full body moves to that file.
+Spill lowest-importance sections one at a time: the section in `CLAUDE.local.md` keeps a 2–3 line summary and a pointer to `.claude/local/<section>.md`; the full body moves to that file.
 
-Spill order (lowest first): `Discovery notes` → `Decomposition hints` → `Risks & gotchas`. The remaining sections (`Goal`, `Out of scope`, `Known Unknowns`, `Decisions`, `Constraints`) are highest-importance and stay inline. Spill until `wc -l CLAUDE.local.md` ≤ 200.
+Spill order (lowest first): `Discovery notes` → `Decomposition hints` → `Risks & gotchas`. The remaining sections (`Goal`, `Out of scope`, `Known Unknowns`, `Decisions`, `Constraints`) stay inline.
 
 Inline summary shape after a section spills:
 
 ```markdown
 ## Discovery notes
-<2–3 sentence summary capturing what's in the spillover file and why director might need it.>
+<2–3 sentence summary of what's in the spillover file and why director might need it.>
 See `.claude/local/discovery-notes.md` for full content.
 ```
-
-The spillover file holds the full section body — same heading and bullet structure as the original.
 
 ## Rule file template
 
 ```markdown
 ---
-paths:                 # Optional: list of globs scoping when the rule loads. Omit for rules that should auto-load every session.
-  - <glob>
+paths:                 # Optional: list of globs. Omit for rules that auto-load every session.
   - <glob>
 ---
 
@@ -259,34 +174,31 @@ paths:                 # Optional: list of globs scoping when the rule loads. Om
 
 ## Rules
 - <specific, actionable rule>
-- <specific, actionable rule>
 
 ## Examples
-<1–3 short examples — a good commit message, a valid test file name, an acceptable docs change, etc.>
+<1–3 short examples.>
 ```
 
-Pull concrete content from Phase 0 findings and Discovery answers. Each rule must stand alone — a reader who opens only that file must know what to do.
+A rule file without `paths:` frontmatter auto-loads every session. A rule with `paths:` loads only when a matching file enters context.
 
-A rule file without `paths:` frontmatter auto-loads every session (use for broadly-applicable rules like commit hygiene). A rule with `paths:` loads only when a matching file enters context (use for narrowly-scoped rules so they don't pay an always-loaded token cost).
+## Director permissions
 
-## Director permissions interview structure
+Eight categories map to settings.json entries:
 
-Discovery walks the user through these eight categories one at a time, proposing defaults from the agreed stack. Each row maps to entries in the **settings.json schema** below.
-
-| Category | Prompt the user on | Maps to |
+| Category | What it covers | Maps to |
 |---|---|---|
 | Bash — allowed | build tools, linters, test runners, package managers that may run freely | `Bash(<prefix>:*)` per command in `allow` |
 | Bash — denied | commands that must never run (`rm -rf`, `sudo`, deploy scripts) | `Bash(<prefix>:*)` per command in `deny` |
-| File creation | freely, restricted to paths, or confirm first | `Write` / `Edit` / `MultiEdit` (bare or scoped with `Write(<path>/**)`) in `allow` |
+| File creation | freely, restricted to paths, or confirm first | `Write` / `Edit` / `MultiEdit` in `allow`, optionally path-scoped |
 | Protected paths | files/dirs that must not be modified (`.env`, `credentials.*`, prod configs) | `Read(<path>)` and `Edit(<path>)` in `deny` |
 | Git commits | auto-commit, push to remote, etc. | relevant `Bash(git ...)` patterns in `allow` / `deny` |
-| Network access | `WebSearch` / `WebFetch` during implementation; forbidden APIs | `WebFetch` / `WebSearch` in `allow` or `deny` |
-| Package management | install / upgrade / remove dependencies | relevant patterns in `allow` (e.g. `Bash(pip install:*)`, `Bash(npm install:*)`) |
-| Always confirm | operations that always require user approval (delete files, drop tables, force-push) | **Omit from both lists.** Unmatched operations prompt at runtime. |
+| Network access | `WebSearch` / `WebFetch` during implementation | `WebFetch` / `WebSearch` in `allow` or `deny` |
+| Package management | install / upgrade / remove dependencies | relevant patterns in `allow` |
+| Always confirm | operations that always require user approval | omit from both lists — unmatched operations prompt at runtime |
 
-After the interview, render the result as the JSON shown in the **settings.json schema** below into the Requirements Summary's **Director permissions** block. Default `defaultMode` to `"acceptEdits"`. Default path is `.claude/settings.local.json` (gitignored); confirm before writing to `.claude/settings.json` instead.
+Default `defaultMode` is `"acceptEdits"`. Default path is `.claude/settings.local.json` (gitignored).
 
-## settings.json schema
+### settings.json schema
 
 ```json
 {
@@ -300,14 +212,9 @@ After the interview, render the result as the JSON shown in the **settings.json 
 
 ## Reference templates
 
-The `references/` directory ships hybrid starter templates for recurring rules: universal content verbatim + labelled slots filled from Discovery answers.
+The `references/` directory ships hybrid starter templates for recurring rule files: universal content verbatim, plus labelled slots filled from Discovery answers.
 
 | ID | Path | Description | Slots filled from |
 |---|---|---|---|
-| `git` | `references/git.md` | Conventional Commits + `plan-management`'s reserved prefixes (`plan:`, `chore(ai):`, `Task:`); universal git hygiene rules | Phase 5 — type subset, custom scopes, release tag format, commit ownership |
-
-Phase 6 marks reference entries as `from reference: <id>`; Step 4 fills their slots via `Edit` calls.
-
-## Out of scope
-
-This skill writes **rule** templates only. Agent authoring (`.claude/agents/*.md`) is director's responsibility — see `agents/director.md`.
+| `git` | `references/git.md` | Conventional Commits + `plan-management`'s reserved prefixes; universal git hygiene | Discovery — type subset, scopes, release tag format, commit ownership |
+| `comment` | `references/comment.md` | Code comment policy; suppresses verbose docstrings and phase-decision narration | None — no slots |

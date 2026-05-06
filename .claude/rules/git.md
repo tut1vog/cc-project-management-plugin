@@ -16,8 +16,8 @@ Good commits:
 ```
 feat(skill-catalog): add gh-backed catalog search helper
 
-Ships bin/skill-catalog so scaffolder can surface pre-built
-SKILL.md files from a user-configurable trusted-repos list at
+Ships bin/skill-catalog so agents can surface pre-built SKILL.md
+files from a user-configurable trusted-repos list at
 ~/.claude/skill-repos.json.
 ```
 ```

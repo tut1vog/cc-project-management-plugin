@@ -7,7 +7,7 @@
     {
       "name": "cc-project-management-plugin",
       "source": "./",
-      "description": "Three orchestration subagents for Claude Code (scaffolder, director, investigator) and the plan-management, project-scaffolding, skill-catalog, and prior-art-research skills."
+      "description": "Two orchestration subagents for Claude Code (director, investigator) and the plan-management, project-scaffolding, skill-catalog, and prior-art-research skills."
     }
   ]
 }
