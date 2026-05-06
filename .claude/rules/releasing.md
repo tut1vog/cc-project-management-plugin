@@ -18,7 +18,6 @@ paths:
   2. Tag: `git tag v<x.y.z>` on that commit.
   3. Push: `git push origin main --tags`.
 - `git push` and `git tag` both require user confirmation on this repo (permissions live in `.claude/settings.local.json`). Do not autonomously push release tags.
-- Treat a change to `DEFAULT_REPOS` in `bin/skill-catalog` as a **MINOR** bump — it changes what users see by default when `~/.claude/skill-repos.json` is absent.
 
 ## Examples
 

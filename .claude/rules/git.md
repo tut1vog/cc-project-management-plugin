@@ -14,11 +14,11 @@
 
 Good commits:
 ```
-feat(skill-catalog): add gh-backed catalog search helper
+feat(prior-art-research): add structured findings report format
 
-Ships bin/skill-catalog so agents can surface pre-built SKILL.md
-files from a user-configurable trusted-repos list at
-~/.claude/skill-repos.json.
+Defines a three-phase investigation procedure and a unified report
+format so any agent can surface evidence on a technical question
+without ad-hoc output conventions.
 ```
 ```
 docs: rewrite README install section for /plugin install workflow
