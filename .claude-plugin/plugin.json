@@ -1,7 +1,7 @@
 {
   "name": "cc-project-management-plugin",
   "version": "0.14.0",
-  "description": "Two orchestration subagents for Claude Code (director, investigator) that autonomously drive execution and research technical questions (bug root causes, feature design, library choices, architectural alternatives) without implementing — bundled with the plan-management, project-scaffolding, skill-catalog, and prior-art-research skills.",
+  "description": "The director orchestration subagent for Claude Code — a powerful actor that drives multi-step work end-to-end via a sense-act loop, delegating to subagents only when warranted — bundled with the plan-management, project-scaffolding, skill-catalog, and prior-art-research skills.",
   "author": {
     "name": "tut1vog"
   },

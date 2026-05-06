@@ -13,7 +13,7 @@ paths:
 - One agent, one responsibility. If an agent has two distinct jobs, split it into two agents. Narrow scope + precise `description` is what makes auto-selection reliable.
 - Declare the agent's tools in the `tools:` frontmatter field (comma-separated). The harness enforces this list; the body should reference tools only when describing usage, not as a sidebar list. Director uses bare `Agent` to dispatch to any agent the consumer project ships.
 - Cross-agent references use bare agent names (e.g. "hand off to director"), not plugin-namespaced paths — subagents keep their bare names even when the plugin is installed.
-- When editing an existing agent, preserve its contracts with the others. `CLAUDE.local.md` (written by project-scaffolding skill execution) is auto-loaded by Claude Code at session start and consumed by director; gitignored via `*.local.*`. `director` does not write to `CLAUDE.local.md` — it reads and maintains `PLAN.md` at the repo root, with the format documented in `skills/plan-management/SKILL.md`.
+- When editing an existing agent, preserve its contracts with the others. `CLAUDE.local.md` (written by project-scaffolding skill execution) is auto-loaded by Claude Code at session start and consumed by director; gitignored via `*.local.*`. `director` does not write to `CLAUDE.local.md` — it may maintain `PLAN.md` at the repo root for complex goals; the format is documented in `skills/plan-management/SKILL.md`.
 - When an agent always uses a skill, declare it via the `skills:` frontmatter field. The harness preloads the skill content into the agent's context at startup, so the agent does not need to be told to read it. Reserve on-demand reads for skills that are only situationally relevant.
 - After any edit to `agents/*.md`, verify the plugin still loads: `claude --plugin-dir ./` then `/agents` — all expected agents must appear.
 
@@ -32,10 +32,8 @@ Good frontmatter:
 ```yaml
 ---
 name: director
-description: Autonomous project director for delegated end-to-end execution. Given a high-level goal, decomposes the work into a plan, dispatches subagents, verifies output, owns all git commits, and auto-continues through Orient → Plan → Dispatch → Verify with minimal user intervention.
+description: Autonomous technical director for complex multi-step work. Acts as a powerful actor — reads files, runs commands, edits code, and delegates to subagents only when warranted. Operates a continuous sense-act loop until the goal is met. Owns all git commits.
 tools: Read, Write, Edit, Glob, Grep, Bash, WebSearch, WebFetch, Agent
-skills:
-  - plan-management
 ---
 ```
 

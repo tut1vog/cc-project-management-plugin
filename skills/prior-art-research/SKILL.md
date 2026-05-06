@@ -4,7 +4,7 @@ description: Use external prior art — GitHub issues, Stack Overflow, library c
 user-invocable: false
 ---
 
-A skill for **research-driven investigation**: gather local evidence, optionally consult external prior art, and emit a structured findings report. Used by the `investigator` agent and available to any agent that needs to research a technical question before acting.
+A skill for **research-driven investigation**: gather local evidence, optionally consult external prior art, and emit a structured findings report. Available to any agent that needs to research a technical question before acting.
 
 The skill operates in three modes — **Understand → Research → Synthesize** — followed by a Closeout. Mode 2 is optional. Never skip Understand. Always close out by reverting instrumentation and emitting the report.
 

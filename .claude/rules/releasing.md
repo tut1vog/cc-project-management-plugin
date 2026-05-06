@@ -12,7 +12,7 @@ paths:
 - Never tag a release if any of the following haven't passed:
   1. `python3 -m json.tool .claude-plugin/plugin.json` — valid JSON.
   2. `python3 -m json.tool .claude-plugin/marketplace.json` — valid JSON.
-  3. `claude --plugin-dir ./` — plugin loads and all three agents appear in `/agents`.
+  3. `claude --plugin-dir ./` — plugin loads and all expected agents appear in `/agents`.
 - Release procedure:
   1. Update `plugin.json` `version` to the target, commit with `chore: bump plugin.json to v<x.y.z>`.
   2. Tag: `git tag v<x.y.z>` on that commit.

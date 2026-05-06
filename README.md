@@ -1,6 +1,6 @@
 # Claude Code Project Management Plugin
 
-A Claude Code plugin that manages and automates Claude Code projects — from initial setup through ongoing development. Install it once and get two orchestration subagents (`director`, `investigator`) plus the `plan-management`, `project-scaffolding`, `skill-catalog`, and `prior-art-research` skills, for structured planning, execution, research, and verification across every project you work in.
+A Claude Code plugin that manages and automates Claude Code projects — from initial setup through ongoing development. Install it once and get the `director` orchestration subagent plus the `plan-management`, `project-scaffolding`, `skill-catalog`, and `prior-art-research` skills, for structured planning, execution, research, and verification across every project you work in.
 
 ## Prerequisites
 
@@ -41,20 +41,16 @@ Opt out during Discovery to skip the rule and the maintenance step entirely.
 
 ### director
 
-Plans, dispatches, and strictly verifies multi-step work end-to-end via subagents; owns all git commits, including the `plan:` commits that define and revise the current plan. Use to hand off a feature or project for autonomous execution, with user review whenever the plan changes.
-
-### investigator
-
-Investigates technical questions before action — bug root causes, feature design decisions, library or pattern choices, architectural alternatives — by gathering evidence from source, git history, and (optionally) prior art on GitHub or the web. Produces a structured report with findings and a recommended next step; does not implement. Use when you need to understand the problem space before committing to an approach.
+Autonomous technical director for complex multi-step work. Acts as a powerful actor — reads files, runs commands, edits code, and delegates to subagents only when warranted. Operates a continuous sense-act loop: reads the situation, picks the next action, executes, repeats until the goal is met. Owns all git commits.
 
 ## Skills
 
 The plugin bundles four skills:
 
-- **`plan-management`** — canonical format and read/write commands for the `plan:` and `Task:` journal commits director stores in git history. Auto-loaded by director.
+- **`plan-management`** — canonical format and read/write instructions for the `PLAN.md` file director maintains at the repo root. Loaded by director on demand when the goal warrants persisting a plan.
 - **`project-scaffolding`** — context for setting up Claude Code in a project: what information a scaffold requires, what files result, and their templates. User-invocable — load it before asking to scaffold a project or be grilled about project setup.
 - **`skill-catalog`** — searches `SKILL.md` files in trusted GitHub repositories via the `gh` CLI. Auto-loaded by agents during project setup.
-- **`prior-art-research`** — research procedure and report format used by investigator to gather evidence and synthesize findings. Auto-loaded by investigator.
+- **`prior-art-research`** — research procedure and report format for gathering evidence and synthesizing findings on technical questions. Available to any agent or director directly.
 
 ## Configuring skill-catalog
 
