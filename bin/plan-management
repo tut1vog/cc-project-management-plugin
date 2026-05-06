@@ -2,18 +2,29 @@
 """Read-side helper for the plan-management skill.
 
 Walks the chain of `plan:` commits in the current git repository's history,
-merges their bodies per the skill spec, and prints the result to stdout.
+parses each commit body strictly, applies per-phase and per-task delta
+operations, and renders the merged plan to stdout.
 
 Run from inside any git repository. Requires only the Python stdlib and `git`.
 Shipped on PATH by the cc-project-management-plugin as `plan-management`.
 
 Usage:
-  plan-management current   # merged plan body (Goal + phase blocks, sorted by N)
-  plan-management root      # chain root SHA (use for the task-status window)
-  plan-management leaf      # chain leaf SHA (most recent plan: commit)
-  plan-management chain     # every chain commit SHA, one per line, root -> leaf
+  plan-management current      # merged plan body with derived display labels
+  plan-management status       # merged plan annotated with per-task status
+  plan-management root         # chain root SHA
+  plan-management leaf         # chain leaf SHA (most recent plan: commit)
+  plan-management chain        # every chain SHA, one per line, root -> leaf
+  plan-management resolve <ID> # given a stable ID (Pn or Tn), print its
+                               # current display label and title
+  plan-management notes        # per-revision Notes blocks from chain commits
+  plan-management next-ids     # next available stable IDs ("P<n> T<m>")
+  plan-management validate     # parse + cycle check; exit non-zero on errors
 
-Exit code 2 if no `plan:` commit exists in history.
+Exit codes:
+  0  success
+  1  invalid arguments
+  2  no plan: commit found in history
+  3  parse error or merge inconsistency
 """
 
 from __future__ import annotations
@@ -22,6 +33,10 @@ import re
 import subprocess
 import sys
 from collections import OrderedDict
+from dataclasses import dataclass, field
+
+
+# ---------- git plumbing ----------
 
 
 def git(*args: str) -> str:
@@ -39,19 +54,257 @@ def commit_body(sha: str) -> str:
     return git("show", sha, "-s", "--format=%b")
 
 
+def commit_subject(sha: str) -> str:
+    return git("show", sha, "-s", "--format=%s").strip()
+
+
+def short_sha(sha: str) -> str:
+    return git("rev-parse", "--short", sha).strip()
+
+
+# ---------- regex grammar ----------
+
 PARENT_RE = re.compile(r"^Parent:\s+([0-9a-fA-F]{4,40})\s*$")
-PHASE_RE = re.compile(r"^##\s+Phase\s+(\d+)\s*:", re.IGNORECASE)
-GOAL_RE = re.compile(r"^Goal:\s*\S")
-NOTES_RE = re.compile(r"^Notes:\s*", re.IGNORECASE)
+GOAL_RE = re.compile(r"^Goal:\s*(\S.*)$")
+NOTES_RE = re.compile(r"^Notes:\s*(.*)$")
+
+PHASE_HEADER_RE = re.compile(
+    r"^##\s+Phase\s+(P\d+)"          # phase id
+    r"(?::\s*([^\[]+?))?"             # optional ": title"
+    r"(?:\s*\[after:\s*(P\d+)\])?"    # optional "[after: Pm]"
+    r"\s*$"
+)
+PHASE_GOAL_RE = re.compile(r"^>\s*(.+\S)\s*$")
+REMOVE_PHASE_RE = re.compile(r"^-\s+(P\d+)\s*$")
+
+ADD_TASK_RE = re.compile(
+    r"^\+\s+(T\d+):\s*([^\[]+?)"
+    r"(?:\s*\[after:\s*(T\d+)\])?"
+    r"\s*$"
+)
+REVISE_TASK_RE = re.compile(
+    r"^~\s+(T\d+)"
+    r"(?::\s*([^\[]+?))?"
+    r"(?:\s*\[after:\s*(T\d+)\])?"
+    r"\s*$"
+)
+REMOVE_TASK_RE = re.compile(r"^-\s+(T\d+)\s*$")
+
+TASK_ENTRY_RE = re.compile(r"^Task:\s+(T\d+)")
+OUTCOME_RE = re.compile(r"^Outcome:\s+(passed|failed|superseded)")
 
 
-def parent_of(sha: str) -> str | None:
-    for line in commit_body(sha).splitlines():
-        if not line.strip():
+# ---------- data model ----------
+
+
+@dataclass
+class Task:
+    id: str
+    title: str
+    phase_id: str
+    after: str | None = None
+    creation_order: int = 0
+
+
+@dataclass
+class Phase:
+    id: str
+    title: str = ""
+    goal: str = ""
+    after: str | None = None
+    creation_order: int = 0
+    task_order: list[str] = field(default_factory=list)  # creation order of tasks in this phase
+
+
+@dataclass
+class Plan:
+    goal: str = ""
+    phases: "OrderedDict[str, Phase]" = field(default_factory=OrderedDict)
+    tasks: "OrderedDict[str, Task]" = field(default_factory=OrderedDict)
+    counter: int = 0  # global creation-order counter
+
+    def next_order(self) -> int:
+        self.counter += 1
+        return self.counter
+
+
+# ---------- parser ----------
+
+
+@dataclass
+class PhaseOp:
+    """One phase block parsed from a commit body."""
+    phase_id: str
+    title: str | None  # None means header carried no `:title`
+    after: str | None  # None means header carried no `[after: Pm]`
+    after_present: bool  # True if `[after: ...]` clause was syntactically present
+    title_present: bool
+    goal: str | None
+    task_ops: list[tuple[str, ...]]  # ("+", id, title, after_or_none) | ("~", id, title_or_none, after_or_none, after_present, title_present) | ("-", id)
+
+
+@dataclass
+class CommitParse:
+    sha: str
+    parent: str | None
+    goal: str | None
+    notes: str | None
+    phase_ops: list[PhaseOp]
+    phase_removes: list[str] = field(default_factory=list)  # phase IDs to remove (children only)
+
+
+def parse_commit(sha: str) -> CommitParse:
+    body = commit_body(sha)
+    lines = body.splitlines()
+    n = len(lines)
+    parent: str | None = None
+    goal: str | None = None
+    notes: str | None = None
+    phase_ops: list[PhaseOp] = []
+    phase_removes: list[str] = []
+
+    i = 0
+    # Skip leading blanks
+    while i < n and not lines[i].strip():
+        i += 1
+
+    # Optional Parent: line (if present, must be the first non-empty line)
+    if i < n:
+        m = PARENT_RE.match(lines[i])
+        if m:
+            parent = m.group(1)
+            i += 1
+
+    while i < n:
+        line = lines[i]
+        stripped = line.strip()
+
+        if not stripped:
+            i += 1
             continue
-        m = PARENT_RE.match(line)
-        return m.group(1) if m else None
-    return None
+
+        # Goal: line (only valid in root bodies; we accept it anywhere and let
+        # the merger enforce semantics — a root has parent=None and must have
+        # a Goal, a child must not).
+        m = GOAL_RE.match(line)
+        if m:
+            if goal is not None:
+                _die(sha, i, "duplicate Goal: line")
+            goal = m.group(1).strip()
+            i += 1
+            continue
+
+        # Notes: starts a free-form block to end-of-body
+        m = NOTES_RE.match(line)
+        if m:
+            collected = [m.group(1).rstrip()]
+            i += 1
+            while i < n:
+                collected.append(lines[i].rstrip())
+                i += 1
+            notes = "\n".join(collected).strip("\n")
+            break
+
+        # Phase removal: - Pn (top-level, children only — enforced at merge time)
+        m = REMOVE_PHASE_RE.match(line)
+        if m:
+            phase_removes.append(m.group(1))
+            i += 1
+            continue
+
+        # Phase header
+        m = PHASE_HEADER_RE.match(line)
+        if m:
+            phase_id = m.group(1)
+            raw_title = m.group(2)
+            after = m.group(3)
+            title_present = raw_title is not None
+            after_present = "[after:" in line.lower()
+
+            phase_goal: str | None = None
+            task_ops: list[tuple] = []
+            i += 1
+            while i < n:
+                inner = lines[i]
+                inner_stripped = inner.strip()
+                if not inner_stripped:
+                    i += 1
+                    continue
+                # End of this phase block when we hit another header or notes
+                if PHASE_HEADER_RE.match(inner) or NOTES_RE.match(inner) or GOAL_RE.match(inner) or REMOVE_PHASE_RE.match(inner):
+                    break
+
+                gm = PHASE_GOAL_RE.match(inner)
+                if gm:
+                    if phase_goal is not None:
+                        _die(sha, i, "duplicate goal '>' line in a phase block")
+                    phase_goal = gm.group(1).strip()
+                    i += 1
+                    continue
+
+                am = ADD_TASK_RE.match(inner)
+                if am:
+                    task_ops.append(("+", am.group(1), am.group(2).strip(), am.group(3)))
+                    i += 1
+                    continue
+
+                rm = REVISE_TASK_RE.match(inner)
+                if rm:
+                    title_in = rm.group(2)
+                    after_in = rm.group(3)
+                    inner_lower = inner.lower()
+                    after_in_present = "[after:" in inner_lower
+                    title_in_present = title_in is not None
+                    if not (title_in_present or after_in_present):
+                        _die(sha, i, f"`~ {rm.group(1)}` must change title and/or order")
+                    task_ops.append((
+                        "~",
+                        rm.group(1),
+                        title_in.strip() if title_in else None,
+                        after_in,
+                        after_in_present,
+                        title_in_present,
+                    ))
+                    i += 1
+                    continue
+
+                xm = REMOVE_TASK_RE.match(inner)
+                if xm:
+                    task_ops.append(("-", xm.group(1)))
+                    i += 1
+                    continue
+
+                _die(sha, i, f"unrecognized line in phase block: {inner!r}")
+
+            phase_ops.append(PhaseOp(
+                phase_id=phase_id,
+                title=raw_title.strip() if raw_title else None,
+                after=after,
+                after_present=after_present,
+                title_present=title_present,
+                goal=phase_goal,
+                task_ops=task_ops,
+            ))
+            continue
+
+        _die(sha, i, f"unrecognized line at top level: {line!r}")
+
+    return CommitParse(
+        sha=sha,
+        parent=parent,
+        goal=goal,
+        notes=notes,
+        phase_ops=phase_ops,
+        phase_removes=phase_removes,
+    )
+
+
+def _die(sha: str, line_idx: int, msg: str) -> None:
+    print(f"plan-management: parse error in {short_sha(sha)} at line {line_idx + 1}: {msg}", file=sys.stderr)
+    sys.exit(3)
+
+
+# ---------- chain walk ----------
 
 
 def walk_chain(leaf: str) -> list[str]:
@@ -61,55 +314,284 @@ def walk_chain(leaf: str) -> list[str]:
     cur: str | None = leaf
     while cur:
         if cur in seen:
-            sys.exit(f"plan-management: cycle detected in plan: chain at {cur}")
+            print(f"plan-management: cycle detected in plan: chain at {short_sha(cur)}", file=sys.stderr)
+            sys.exit(3)
         seen.add(cur)
         chain.insert(0, cur)
-        cur = parent_of(cur)
+        parsed = parse_commit(cur)
+        cur = parsed.parent
     return chain
 
 
-def parse_body(body: str) -> tuple[str | None, "OrderedDict[int, str]"]:
-    """Extract Goal: line and ## Phase N: blocks from one commit body."""
-    goal: str | None = None
-    phases: "OrderedDict[int, str]" = OrderedDict()
-    lines = body.splitlines()
-    i, n = 0, len(lines)
-    while i < n:
-        line = lines[i]
-        if goal is None and GOAL_RE.match(line):
-            goal = line.rstrip()
-        m = PHASE_RE.match(line)
-        if m:
-            phase_num = int(m.group(1))
-            block = [line.rstrip()]
-            i += 1
-            while i < n:
-                nxt = lines[i]
-                if PHASE_RE.match(nxt) or NOTES_RE.match(nxt):
-                    break
-                block.append(nxt.rstrip())
-                i += 1
-            while block and not block[-1].strip():
-                block.pop()
-            phases[phase_num] = "\n".join(block)
-            continue
-        i += 1
-    return goal, phases
+# ---------- merge ----------
 
 
-def merge_chain(chain: list[str]) -> tuple[str | None, "OrderedDict[int, str]"]:
-    goal: str | None = None
-    merged: "OrderedDict[int, str]" = OrderedDict()
-    for sha in chain:
-        g, phases = parse_body(commit_body(sha))
-        if goal is None and g is not None:
-            goal = g
-        for num, block in phases.items():
-            merged[num] = block
-    ordered: "OrderedDict[int, str]" = OrderedDict()
-    for num in sorted(merged.keys()):
-        ordered[num] = merged[num]
-    return goal, ordered
+def merge_chain(chain: list[str]) -> Plan:
+    plan = Plan()
+
+    for idx, sha in enumerate(chain):
+        parsed = parse_commit(sha)
+
+        if idx == 0:
+            # Root: must carry Goal, must NOT carry Parent
+            if parsed.parent is not None:
+                _die(sha, 0, "chain root unexpectedly carries Parent: line")
+            if not parsed.goal:
+                _die(sha, 0, "chain root must declare Goal:")
+            if parsed.phase_removes:
+                _die(sha, 0, f"phase removal `- {parsed.phase_removes[0]}` is not allowed in a root commit")
+            plan.goal = parsed.goal
+        else:
+            # Child: must carry Parent, must NOT carry Goal
+            if parsed.parent is None:
+                _die(sha, 0, "chained child must carry Parent: line as first non-empty line")
+            if parsed.goal is not None:
+                _die(sha, 0, "chained child must not redeclare Goal: (it is inherited from the root)")
+            # Apply phase removals before phase ops
+            for pid in parsed.phase_removes:
+                if pid not in plan.phases:
+                    _die(sha, 0, f"`- {pid}` removes a non-existent phase")
+                apply_phase_remove(plan, sha, pid)
+
+        for op in parsed.phase_ops:
+            apply_phase_op(plan, sha, op, is_root=(idx == 0))
+
+    return plan
+
+
+def _last_phase_id(plan: Plan) -> str | None:
+    """Highest-creation-order phase currently in the plan (None if empty)."""
+    if not plan.phases:
+        return None
+    return max(plan.phases.values(), key=lambda p: p.creation_order).id
+
+
+def apply_phase_remove(plan: Plan, sha: str, pid: str) -> None:
+    phase = plan.phases[pid]
+    # Remove all tasks in this phase, with pointer promotion
+    for tid in list(phase.task_order):
+        task = plan.tasks[tid]
+        for other in plan.tasks.values():
+            if other.after == tid:
+                other.after = task.after
+        del plan.tasks[tid]
+    # Promote any phases that pointed at this one
+    for other_phase in plan.phases.values():
+        if other_phase.after == pid:
+            other_phase.after = phase.after
+    del plan.phases[pid]
+
+
+def apply_phase_op(plan: Plan, sha: str, op: PhaseOp, is_root: bool) -> None:
+    pid = op.phase_id
+    if pid not in plan.phases:
+        # Declaring a new phase. Must carry a title (header `: <title>`).
+        if not op.title_present:
+            _die(sha, 0, f"phase {pid} declared without a title")
+        if op.after_present and op.after and op.after not in plan.phases:
+            _die(sha, 0, f"phase {pid} declared with `[after: {op.after}]` but {op.after} does not exist")
+        # No [after:] clause → append after the last existing phase (creation order).
+        if not op.after_present:
+            after = _last_phase_id(plan)
+        else:
+            after = op.after  # may be None (parser shouldn't currently produce this, reserved)
+        phase = Phase(
+            id=pid,
+            title=op.title or "",
+            goal=op.goal or "",
+            after=after,
+            creation_order=plan.next_order(),
+        )
+        plan.phases[pid] = phase
+        # All task ops in a fresh-phase declaration must be `+`.
+        for top in op.task_ops:
+            if top[0] != "+":
+                _die(sha, 0, f"phase {pid} declared but contains a non-add task op `{top[0]} {top[1]}`")
+            apply_task_add(plan, sha, phase, top)
+    else:
+        # Modifying an existing phase
+        phase = plan.phases[pid]
+        if op.title_present:
+            phase.title = op.title or ""
+        if op.after_present:
+            if op.after and op.after not in plan.phases:
+                _die(sha, 0, f"phase {pid} reorder references unknown phase {op.after}")
+            phase.after = op.after
+        if op.goal is not None:
+            phase.goal = op.goal
+        for top in op.task_ops:
+            if top[0] == "+":
+                apply_task_add(plan, sha, phase, top)
+            elif top[0] == "~":
+                apply_task_revise(plan, sha, phase, top)
+            elif top[0] == "-":
+                apply_task_remove(plan, sha, phase, top)
+
+
+def apply_task_add(plan: Plan, sha: str, phase: Phase, top: tuple) -> None:
+    _, tid, title, after = top  # `after` is None when no [after:] clause was written
+    if tid in plan.tasks:
+        _die(sha, 0, f"task {tid} added but already exists (in phase {plan.tasks[tid].phase_id})")
+    if after is not None and after not in plan.tasks:
+        _die(sha, 0, f"task {tid} declared with `[after: {after}]` but {after} does not exist")
+    if after is not None and plan.tasks[after].phase_id != phase.id:
+        _die(sha, 0, f"task {tid} `[after: {after}]` crosses phase boundary "
+                     f"({after} is in {plan.tasks[after].phase_id}, target phase is {phase.id})")
+    if after is None:
+        # No [after:] clause → append after the last task currently in this phase.
+        after = phase.task_order[-1] if phase.task_order else None
+    task = Task(id=tid, title=title, phase_id=phase.id, after=after, creation_order=plan.next_order())
+    plan.tasks[tid] = task
+    phase.task_order.append(tid)
+
+
+def apply_task_revise(plan: Plan, sha: str, phase: Phase, top: tuple) -> None:
+    _, tid, title, after, after_present, title_present = top
+    if tid not in plan.tasks:
+        _die(sha, 0, f"`~ {tid}` revises a non-existent task")
+    task = plan.tasks[tid]
+    if task.phase_id != phase.id:
+        _die(sha, 0, f"`~ {tid}` appears under phase {phase.id} but task is in phase {task.phase_id}")
+    if title_present:
+        task.title = title or ""
+    if after_present:
+        if after is not None and after not in plan.tasks:
+            _die(sha, 0, f"`~ {tid}` references unknown task {after}")
+        if after is not None and plan.tasks[after].phase_id != phase.id:
+            _die(sha, 0, f"`~ {tid} [after: {after}]` crosses phase boundary")
+        task.after = after
+
+
+def apply_task_remove(plan: Plan, sha: str, phase: Phase, top: tuple) -> None:
+    _, tid = top
+    if tid not in plan.tasks:
+        _die(sha, 0, f"`- {tid}` removes a non-existent task")
+    task = plan.tasks[tid]
+    if task.phase_id != phase.id:
+        _die(sha, 0, f"`- {tid}` appears under phase {phase.id} but task is in phase {task.phase_id}")
+    # Promote any tasks that pointed at this one — they inherit its after-target,
+    # so removing a task is idempotent with respect to neighbours' ordering.
+    for other in plan.tasks.values():
+        if other.after == tid:
+            other.after = task.after
+    del plan.tasks[tid]
+    phase.task_order = [t for t in phase.task_order if t != tid]
+
+
+# ---------- ordering ----------
+
+
+def order_phases(plan: Plan) -> list[str]:
+    """Resolve phase display order via after: pointers, tiebreak by creation order."""
+    return _topo_sort(
+        items=list(plan.phases.values()),
+        get_id=lambda p: p.id,
+        get_after=lambda p: p.after,
+        get_co=lambda p: p.creation_order,
+        kind="phase",
+    )
+
+
+def order_tasks(plan: Plan, phase: Phase) -> list[str]:
+    tasks = [plan.tasks[tid] for tid in phase.task_order if tid in plan.tasks]
+    return _topo_sort(
+        items=tasks,
+        get_id=lambda t: t.id,
+        get_after=lambda t: t.after,
+        get_co=lambda t: t.creation_order,
+        kind="task",
+    )
+
+
+def _topo_sort(items, get_id, get_after, get_co, kind):
+    """Order items: a None `after` means 'at the start'; otherwise the item
+    follows its target. Ties (multiple items with the same `after`) break by
+    creation order — earlier creation comes first.
+    """
+    by_id = {get_id(it): it for it in items}
+    children: dict[str | None, list] = {}  # after-target -> list of items
+    for it in items:
+        children.setdefault(get_after(it), []).append(it)
+    # Tiebreak: when several items share the same `after:` target, the
+    # earlier-created one displays first (queue semantics — items appear in
+    # the order they were added).
+    for key in children:
+        children[key].sort(key=get_co)
+
+    visiting: set[str] = set()
+    visited: set[str] = set()
+    out: list[str] = []
+
+    def dfs_after_target(target: str | None) -> None:
+        for it in children.get(target, []):
+            tid = get_id(it)
+            if tid in visited:
+                continue
+            if tid in visiting:
+                names = ", ".join(sorted(visiting))
+                print(
+                    f"plan-management: cycle detected among {kind}s via after: pointers ({names})",
+                    file=sys.stderr,
+                )
+                sys.exit(3)
+            visiting.add(tid)
+            out.append(tid)
+            dfs_after_target(tid)
+            visiting.discard(tid)
+            visited.add(tid)
+
+    dfs_after_target(None)
+
+    # Anything with an after-target that wasn't reachable from None means the
+    # target itself was unreachable — this implies a cycle elsewhere or a
+    # dangling pointer (which apply_*_op would have caught earlier). Surface
+    # it explicitly.
+    if len(out) != len(items):
+        unreached = [get_id(it) for it in items if get_id(it) not in visited]
+        print(
+            f"plan-management: cycle detected among {kind}s via after: pointers ({', '.join(unreached)})",
+            file=sys.stderr,
+        )
+        sys.exit(3)
+    return out
+
+
+def display_labels(plan: Plan) -> tuple[dict[str, str], dict[str, str]]:
+    phase_labels: dict[str, str] = {}
+    task_labels: dict[str, str] = {}
+    for pi, pid in enumerate(order_phases(plan), start=1):
+        phase_labels[pid] = str(pi)
+        for ti, tid in enumerate(order_tasks(plan, plan.phases[pid]), start=1):
+            task_labels[tid] = f"{pi}.{ti}"
+    return phase_labels, task_labels
+
+
+# ---------- task status ----------
+
+
+def load_task_outcomes(root_sha: str) -> dict[str, str]:
+    """Return {task_id: most_recent_outcome} for all task journal entries since root."""
+    raw = git("log", f"{root_sha}..HEAD", "--grep=^Task:", "--format=%H")
+    shas = [s.strip() for s in raw.splitlines() if s.strip()]
+    outcomes: dict[str, str] = {}
+    # git log is newest-first; first hit per task ID is most recent.
+    for sha in shas:
+        body = commit_body(sha)
+        tid: str | None = None
+        outcome: str | None = None
+        for line in body.splitlines():
+            m = TASK_ENTRY_RE.match(line)
+            if m:
+                tid = m.group(1)
+            m2 = OUTCOME_RE.match(line)
+            if m2:
+                outcome = m2.group(1)
+        if tid and outcome and tid not in outcomes:
+            outcomes[tid] = outcome
+    return outcomes
+
+
+# ---------- commands ----------
 
 
 def require_leaf() -> str:
@@ -120,14 +602,45 @@ def require_leaf() -> str:
     return leaf
 
 
+def load_plan() -> Plan:
+    return merge_chain(walk_chain(require_leaf()))
+
+
 def cmd_current() -> None:
-    chain = walk_chain(require_leaf())
-    goal, phases = merge_chain(chain)
-    if goal:
-        print(goal)
+    plan = load_plan()
+    p_lbl, t_lbl = display_labels(plan)
+
+    print(f"Goal: {plan.goal}")
+    print()
+    for pid in order_phases(plan):
+        phase = plan.phases[pid]
+        print(f"## Phase {p_lbl[pid]}: {phase.title} [{pid}]")
+        if phase.goal:
+            print(f"> {phase.goal}")
+        for tid in order_tasks(plan, phase):
+            task = plan.tasks[tid]
+            print(f"- {t_lbl[tid]} [{tid}] {task.title}")
         print()
-    for num in phases:
-        print(phases[num])
+
+
+def cmd_status() -> None:
+    chain = walk_chain(require_leaf())
+    plan = merge_chain(chain)
+    root_sha = chain[0]
+    outcomes = load_task_outcomes(root_sha)
+    p_lbl, t_lbl = display_labels(plan)
+
+    print(f"Goal: {plan.goal}")
+    print()
+    for pid in order_phases(plan):
+        phase = plan.phases[pid]
+        print(f"## Phase {p_lbl[pid]}: {phase.title} [{pid}]")
+        if phase.goal:
+            print(f"> {phase.goal}")
+        for tid in order_tasks(plan, phase):
+            task = plan.tasks[tid]
+            status = outcomes.get(tid, "")
+            print(f"- {t_lbl[tid]} [{tid}] {status:<12}{task.title}")
         print()
 
 
@@ -144,18 +657,100 @@ def cmd_chain() -> None:
         print(sha)
 
 
+def cmd_resolve(arg: str) -> None:
+    plan = load_plan()
+    p_lbl, t_lbl = display_labels(plan)
+    if arg.startswith("P"):
+        if arg not in p_lbl:
+            print(f"plan-management: phase {arg} not found in current plan", file=sys.stderr)
+            sys.exit(2)
+        print(f"Phase {p_lbl[arg]}: {plan.phases[arg].title}")
+    elif arg.startswith("T"):
+        if arg not in t_lbl:
+            print(f"plan-management: task {arg} not found in current plan", file=sys.stderr)
+            sys.exit(2)
+        print(f"Task {t_lbl[arg]}: {plan.tasks[arg].title}")
+    else:
+        print(f"plan-management: id must start with 'P' or 'T', got {arg!r}", file=sys.stderr)
+        sys.exit(2)
+
+
+def cmd_notes() -> None:
+    chain = walk_chain(require_leaf())
+    first = True
+    for sha in chain:
+        parsed = parse_commit(sha)
+        if not parsed.notes:
+            continue
+        if not first:
+            print("---")
+        first = False
+        print(f"{short_sha(sha)} {commit_subject(sha)}")
+        print(parsed.notes)
+
+
+def cmd_next_ids() -> None:
+    plan = load_plan()
+    # Walk the chain again to find the highest IDs ever used (including ones
+    # since removed) so we never recycle.
+    max_p = 0
+    max_t = 0
+    for sha in walk_chain(require_leaf()):
+        parsed = parse_commit(sha)
+        for op in parsed.phase_ops:
+            num = int(op.phase_id[1:])
+            if num > max_p:
+                max_p = num
+            for top in op.task_ops:
+                tid = top[1]
+                tnum = int(tid[1:])
+                if tnum > max_t:
+                    max_t = tnum
+    print(f"P{max_p + 1} T{max_t + 1}")
+
+
+def cmd_validate() -> None:
+    plan = load_plan()
+    # Side-effect: order_phases / order_tasks raise on cycles.
+    order_phases(plan)
+    for phase in plan.phases.values():
+        order_tasks(plan, phase)
+    print("ok")
+
+
 COMMANDS = {
     "current": cmd_current,
+    "status": cmd_status,
     "root": cmd_root,
     "leaf": cmd_leaf,
     "chain": cmd_chain,
+    "notes": cmd_notes,
+    "next-ids": cmd_next_ids,
+    "validate": cmd_validate,
 }
 
 
 def main() -> None:
-    if len(sys.argv) != 2 or sys.argv[1] not in COMMANDS:
-        sys.exit(f"usage: plan-management {{{'|'.join(COMMANDS)}}}")
-    COMMANDS[sys.argv[1]]()
+    args = sys.argv[1:]
+    if not args:
+        _usage()
+    cmd = args[0]
+    if cmd == "resolve":
+        if len(args) != 2:
+            _usage()
+        cmd_resolve(args[1])
+        return
+    if cmd not in COMMANDS or len(args) != 1:
+        _usage()
+    COMMANDS[cmd]()
+
+
+def _usage() -> None:
+    print(
+        "usage: plan-management {current|status|root|leaf|chain|resolve <ID>|notes|next-ids|validate}",
+        file=sys.stderr,
+    )
+    sys.exit(1)
 
 
 if __name__ == "__main__":

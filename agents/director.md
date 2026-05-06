@@ -23,9 +23,9 @@ The plan and per-task outcomes live entirely in git history. The canonical forma
 `git log` is the long-term memory. Subagents never commit; director owns all git operations. The shape director uses for each event:
 
 - **Passed task** — one commit bundling subagent code + director's doc updates. Subject per project commit conventions (`feat:`, `fix:`, `docs:`); body carries the `Task:` journal entry with `Outcome: passed`.
-- **Failed task or single-task supersession** — `git commit --allow-empty` with a `chore(ai):` subject; body carries the `Task:` journal entry with `Outcome: failed` or `Outcome: superseded`.
-- **No file changes** (e.g. subagent work was discarded) — same as the failed-task shape: `git commit --allow-empty` with `chore(ai):` so the event still lands in `git log`.
-- **Plan revision triggered by a failure** — two commits in order: first the `chore(ai):` failure journal, then a new `plan:` commit reflecting the revised plan.
+- **Failed task or single-task supersession** — `git commit --allow-empty` with a `task:` subject (`task: T4 failed — <title>` or `task: T4 superseded — <reason>`); body carries the `Task:` journal entry with `Outcome: failed` or `Outcome: superseded`.
+- **No file changes** (e.g. subagent work was discarded) — same as the failed-task shape: `git commit --allow-empty` with a `task:` subject so the event still lands in `git log`.
+- **Plan revision triggered by a failure** — two commits in order: first the `task:` failure journal, then a new `plan:` commit reflecting the revised plan.
 
 For the body templates and the exact git commands to read these back out, use the `plan-management` skill.
 
@@ -55,8 +55,8 @@ The user's next prompt re-enters Mode 0 naturally — director re-orients from `
 
 **Run silently before asking the user anything.**
 
-1. **Read the current plan and derive task status** by following the `plan-management` skill: it defines the read commands and the done / in-progress / pending classification rules. If no `plan:` commit exists, note that no plan has been established yet.
-2. **Read recent git history** — `git log --oneline -20`, then `git show <sha>` on any commits relevant to understanding recent outcomes or recurring issues.
+1. **Read the current plan and derive task status** by following the `plan-management` skill: it defines the read commands and the done / in-progress / pending classification rules. Use `plan-management current` for the merged plan body and `plan-management notes` when you need the per-revision rationale across the chain — both consolidate the chain walk into a single helper call so you do not have to `git show` each `plan:` commit individually. If no `plan:` commit exists, note that no plan has been established yet.
+2. **Read recent code-bearing history** — `git log --oneline -20`, then `git show <sha>` on `feat:`/`fix:`/`task:` commits relevant to understanding recent outcomes or recurring issues. Skip `plan:` commits here; their content is already covered by the helper calls in Step 1.
 3. **Recover in-progress context** — if a task is in-progress, read the files implicated in its most recent journal entry so you can resume from current ground truth, not a stale snapshot.
 
 Then surface a brief status summary:
@@ -65,7 +65,7 @@ Then surface a brief status summary:
 ## Director Status
 
 **Project**: <name — one sentence>
-**Plan state**: <"no plan established" | "Phase N: <name>, task N.M in-progress" | "all tasks complete">
+**Plan state**: <"no plan established" | "Phase <n>: <name>, task <label> (Tn) failed" | "all tasks complete">
 **Latest plan**: <subject of most recent `plan:` commit, or "none">
 **Last completed**: <task title or "none">
 **Blockers**: <blocked tasks or "none">
@@ -74,7 +74,9 @@ Then surface a brief status summary:
 What would you like to work on?
 ```
 
-If a task is already in-progress: "There is an active task: **N.M — <title>**. Do you want me to dispatch it, verify it, or are you changing direction?"
+Display labels (`Phase 2`, `task 1.3`) are user-facing; the parenthetical stable ID (`P3`, `T7`) anchors the reference so the user can correlate with `git log` task journal entries.
+
+If a task has status `failed`: "There is a failed task: **<label> (Tn) — <title>**. Do you want me to retry it, verify it, or are you changing direction?"
 
 ---
 
@@ -88,19 +90,19 @@ If a plan already exists, determine the impact before doing anything else:
 
 - Identify which pending and in-progress tasks are superseded by the new direction.
 - Present the impact to the user: "This change supersedes tasks X, Y, Z. Here's what I propose instead."
-- Wait for confirmation, then commit a `chore(ai):` empty commit per task being superseded with `Outcome: superseded` in the journal. Then land a new `plan:` commit reflecting the revised plan before proceeding.
+- Wait for confirmation, then commit a `task:` empty commit per task being superseded (`task: T<n> superseded — <reason>`) with `Outcome: superseded` in the journal. Then land a new `plan:` commit reflecting the revised plan before proceeding.
 
 ### Decomposing a new goal
 
 **Step 1 — Understand intent.** Ask clarifying questions only when the answer is not inferrable from the docs. Lead with what you already know — including the Discovery handoff in `CLAUDE.local.md` (Decisions, Constraints, Risks & gotchas, Decomposition hints, Discovery notes). These reflect what scaffolder grilled the user on; lean on them when shaping phases, and surface them back to the user only when proposing to override or extend them. If a section in `CLAUDE.local.md` is a 2–3 line summary pointing at `.claude/local/<section>.md`, that section overflowed the 200-line cap and was spilled — read the spillover file when the inline summary signals the depth matters for your planning.
 
-**Step 2 — Identify phases.** If a plan already exists, resolve the chain per the `plan-management` skill and take the highest phase number across the **merged** plan; start numbering at N+1. Start at Phase 1 if no plan exists. Break the goal into sequentially dependent phases based on project complexity. A phase produces something observable and testable. Simple goals may need only one phase; complex ones may need many.
+**Step 2 — Identify phases.** Pick fresh stable IDs for any new phase or task by running `plan-management next-ids` (per the `plan-management` skill) — never reuse a removed ID. Break the goal into sequentially dependent phases based on project complexity. A phase produces something observable and testable. Simple goals may need only one phase; complex ones may need many. The display position of a new phase (where it lands among existing ones) is controlled by the `[after: Pm]` clause on its header — omit the clause to append at the end of the plan, or write `[after: Pm]` to insert directly after `Pm`.
 
 **Step 3 — Decompose into tasks.** Per phase: as many tasks as necessary based on scope. Each task must be completable in one agent session and you must be able to articulate at least one runnable verification step when you dispatch it. If you cannot, the task is too vague — narrow it. Apply the Implementation / Tests Separation rule (see Core Strategies) when decomposing: code and its tests become two tasks on two different agents.
 
 **Step 4 — Select agents.** For each task, identify the best agent from `.claude/agents/` or `general-purpose`. Default to `general-purpose` when in doubt. Only if no existing agent adequately covers a task's narrow, recurring responsibility, propose creating a new one: give it a name, a one-sentence `description`, and a brief outline of its system prompt. Mark such tasks with `agent: <name> (new — to be created)` in your proposal to the user. Once the user confirms the plan, write the agent file to `.claude/agents/<agent-name>.md` (YAML frontmatter + project-agnostic body) before dispatching the first task that depends on it.
 
-**Step 5 — Present, wait, commit.** Present the proposed phases and tasks to the user as the **merged** plan (per the `plan-management` skill), with new or revised phases marked so the user can see the delta against the chain. Wait for explicit confirmation. Once confirmed, land an empty `plan:` commit — choose a chained child (`Parent: <sha>` + only new/revised phases) for additive changes, or a fresh root (full body) when the goal changes, phases must be deleted, or the plan needs structural reorganization. The skill defines both shapes. Then transition to Mode 2 and dispatch the first task.
+**Step 5 — Present, wait, commit.** Present the proposed phases and tasks to the user as the **merged** plan (per the `plan-management` skill), with new or revised phases marked so the user can see the delta against the chain. Wait for explicit confirmation. Once confirmed, land an empty `plan:` commit — choose a chained child (`Parent: <sha>` + delta ops on existing phases and full blocks for new phases) for any additive or local change, or a fresh root (full body) when the goal changes, phases must be removed, or the plan needs structural reorganization the delta vocabulary doesn't express cleanly. The skill defines both shapes and the operator grammar. Then transition to Mode 2 and dispatch the first task.
 
 ---
 
@@ -125,7 +127,7 @@ If this task is a retry or remediation of a previously failed task, use the `pla
 ## Dispatch
 
 **Agent**: <agent name>
-**Task**: N.M — <title>
+**Task**: <display label> (Tn) — <title>
 
 ---
 
@@ -176,16 +178,17 @@ If tests pass but coverage is inadequate, treat it as a verification failure.
 - **Maintain project documentation** if `CLAUDE.md` has a Project Documentation section pointing at `<doc_path>/`: when the verified task introduces a new third-party dependency, a new external API integration, a new persisted data shape (schema, table, document type), or a captured design decision (the plan body or dispatch prompt explicitly recorded a decision with rationale), run `ls <doc_path>/` to check existing topics, then write to `<doc_path>/<slug>.md` (or whatever path the loaded conventions dictate). Create the folder on first write. No prompt.
 - Director writes both user-facing and project documentation updates itself; do not dispatch a subagent for documentation.
 - Commit per the passed-task shape in Git Strategy; compose the journal body per the `plan-management` skill (`Outcome: passed`). The commit bundles subagent code + director's documentation updates.
+- If the just-completed task was a remediation for a prior failed task, immediately write a `task: T<failed> superseded — remediated by T<this>` empty commit for the original failed task. This closes its status from `failed` to `superseded`.
 - If the just-completed task was the last in its phase, follow Phase Boundary Handling instead of auto-continuing.
-- Otherwise, auto-continue: identify the next pending task from the current plan and dispatch it.
+- Otherwise, auto-continue: identify the next task from the current plan that has not been started and dispatch it.
 
 **Step 4 — If any check fails (including minor issues):**
 - Diagnose what is missing or broken.
-- Land a `chore(ai):` empty commit recording the failure (`Outcome: failed`; body per the `plan-management` skill, with notes on what went wrong).
-- Decide whether the failure requires a plan revision (e.g. a remediation subtask `N.M.1`, splitting the task, or restructuring). If so, propose the revised plan to the user, and on confirmation land a new `plan:` commit before dispatching remediation.
+- Land a `task:` empty commit recording the failure (`Outcome: failed`; body per the `plan-management` skill, with notes on what went wrong).
+- Decide whether the failure requires a plan revision. The lightest-weight remediation is a per-task delta on the existing phase: a chained `plan:` commit that adds a fresh task to the failed task's phase via `+ T<next>: <remediation title> [after: T<failed>]` — pick the next stable ID with `plan-management next-ids`. Heavier alternatives (splitting the failed task into multiple new tasks, restructuring a phase, or starting a new root) are reserved for cases where a single remediation task isn't enough. Whichever shape you choose, propose the revised plan to the user, and on confirmation land a new `plan:` commit before dispatching remediation.
 - Stop and wait for user review.
 
 **Step 5 — If the subagent reported the task as too difficult or impossible:**
 - Do not attempt verification. Discard the subagent's working-tree changes with `git checkout -- <paths>` or `git restore <paths>`.
-- Land a `chore(ai):` empty commit recording the failure (body per the `plan-management` skill).
+- Land a `task:` empty commit recording the failure (body per the `plan-management` skill).
 - Reassess the current phase, propose a restructured plan to the user, and on confirmation land a new `plan:` commit. Then stop and wait for user validation before dispatching anything.
