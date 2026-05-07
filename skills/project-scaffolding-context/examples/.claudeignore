@@ -1,0 +1,48 @@
+# Dependencies
+node_modules/
+vendor/
+.venv/
+venv/
+
+# Build output
+dist/
+build/
+out/
+target/
+.next/
+__pycache__/
+*.pyc
+*.o
+*.a
+*.so
+*.exe
+
+# Lock files
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+poetry.lock
+Cargo.lock
+
+# Test output / coverage
+coverage/
+htmlcov/
+.nyc_output/
+test-results/
+
+# Logs & data
+*.log
+logs/
+*.csv
+*.parquet
+*.db
+*.sqlite
+
+# Generated / minified
+*.min.js
+*.bundle.js
+*.generated.*
+
+# OS / editor noise
+.DS_Store
+Thumbs.db

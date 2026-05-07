@@ -23,6 +23,8 @@ Project knowledge that shouldn't be tracked by git goes into `CLAUDE.local.md`. 
 
 Ensure `.gitignore` contains `*.local.*` to exclude `CLAUDE.local.md`.
 
+Create `.claudeignore` using `examples/.claudeignore` as the starting template; remove sections that don't apply to the project's stack and add any project-specific entries discovered during Discovery.
+
 ## Stack
 
 Goes into `CLAUDE.md` under the `## Stack` section.
@@ -87,12 +89,13 @@ paths:                 # Optional: list of globs. Omit for rules that auto-load 
 <1–3 short examples.>
 ```
 
-Two reference templates in `references/` cover recurring rules:
+Reference templates in `references/`:
 
 | ID | Path | Description | Slots |
 |---|---|---|---|
 | `git` | `references/git.md` | Conventional Commits + `plan-management`'s reserved prefixes; git hygiene | type subset, scopes, release tag format, commit ownership |
 | `comment` | `references/comment.md` | Code comment policy; suppresses verbose docstrings | none |
+| `claudeignore` | `examples/.claudeignore` | Universal `.claudeignore` starter; excludes build artifacts, deps, generated files, and logs | none |
 
 When a project documentation folder exists (`doc/`, `docs/`, etc.), `CLAUDE.md` carries a one-line pointer to it and `.claude/rules/documentation.md` governs it (path-scoped to `<doc_path>/**`).
 
