@@ -84,6 +84,14 @@ Eight categories map to settings.json entries:
 
 `ask` lists operations requiring user confirmation. `additionalDirectories` grants access to paths outside the project root. See `examples/settings.json`.
 
+## Layout templates
+
+Named starting points the agent may propose when the user's goal fits. Templates live in `layouts/`; `SKILL.md` carries only the pointer and when-to-consider description.
+
+| Layout | File | When to consider |
+|---|---|---|
+| Multi-agent | `layouts/multi-agent.md` | Goal decomposes into clearly separate, autonomous responsibilities — each handled by a dedicated agent with its own workflows and memory |
+
 ## CLAUDE.md
 
 CLAUDE.md is loaded into every session automatically — it is the model's only persistent context about the project. Write it with that constraint in mind:
