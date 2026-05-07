@@ -14,3 +14,5 @@ Thumbs.db
 # Python bytecode (from skills/plan-management/plan.py)
 __pycache__/
 *.pyc
+
+.claude/skills
