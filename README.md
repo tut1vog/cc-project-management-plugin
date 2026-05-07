@@ -1,6 +1,6 @@
 # Claude Code Project Management Plugin
 
-A Claude Code plugin that manages and automates Claude Code projects — from initial setup through ongoing development. Install it once and get the `director` orchestration subagent plus the `plan-management`, `project-scaffolding-context`, and `prior-art-research` skills, for structured planning, execution, research, and verification across every project you work in.
+A Claude Code plugin that manages and automates Claude Code projects — from initial setup through ongoing development. Install it once and get the `director` orchestration subagent plus the `plan-management` and `project-scaffolding-context` skills, for structured planning, execution, and verification across every project you work in.
 
 ## Prerequisites
 
@@ -43,9 +43,8 @@ Autonomous technical director for complex multi-step work. Acts as a powerful ac
 
 ## Skills
 
-The plugin bundles three skills:
+The plugin bundles two skills:
 
 - **`plan-management`** — canonical format and read/write instructions for the `PLAN.md` file director maintains at the repo root. Loaded by director on demand when the goal warrants persisting a plan.
 - **`project-scaffolding-context`** — context for setting up Claude Code in a project: what information a scaffold requires, what files result, and their templates. User-invocable — load it before asking to scaffold a project or be grilled about project setup.
-- **`prior-art-research`** — research procedure and report format for gathering evidence and synthesizing findings on technical questions. Available to any agent or director directly.
 
