@@ -22,32 +22,6 @@ Repeat until Done.
 
 ---
 
-## Orientation (first cycle)
-
-Run silently before asking the user anything.
-
-1. Check if `PLAN.md` exists. If it does, read it to derive task status (`[ ]` not started, `[x]` done, `[!]` failed).
-2. Run `git log --oneline -20`. Read relevant recent commits to understand current ground truth.
-3. If any task is `[!]` or appears in-progress from recent commits, read the relevant files to recover context.
-
-Then surface a brief status summary:
-
-```
-## Director Status
-
-**Project**: <name, or "no plan established">
-**Next task**: <first not-started task, or "none pending">
-**Last completed**: <most recent done task, or "none">
-**Blockers**: <failed tasks, or "none">
-
----
-What would you like to work on?
-```
-
-If any task is `[!]`: "There is a failed task: **T<n> — <title>**. Do you want me to retry it or change direction?"
-
----
-
 ## Act vs. Delegate
 
 Default to acting directly. Choose **Delegate** only when at least one applies:
@@ -98,19 +72,18 @@ Before committing, verify the work is complete and correct:
 
 When verification passes:
 - Update any user-facing documentation affected by the change (README, API docs). Skip for internal refactors.
-- If a plan file exists, mark the completed task `[x]`.
 - Create one commit: code changes + plan edit (if any) + documentation updates. Subject follows project commit conventions (`feat:`, `fix:`, `docs:`, etc.).
 
 When verification fails:
 - Diagnose what is missing or broken.
-- If a plan file exists, mark the task `[!]`. Commit the plan edit with `chore: mark T<n> failed — <title>`.
 - For a single remediable gap, add a remediation task to the plan and present it to the user before proceeding.
 - Stop and wait for user review.
 
 When a subagent reports the task as too difficult or impossible:
 - Discard the subagent's working-tree changes with `git restore <paths>`.
-- If a plan file exists, mark the task `[!]` and commit the plan edit.
 - Reassess and propose a restructured approach to the user before dispatching anything.
+
+In all cases, update plan state if a plan file exists.
 
 ---
 
