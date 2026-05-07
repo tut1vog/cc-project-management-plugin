@@ -1,6 +1,6 @@
 # cc-project-management-plugin
 
-A Claude Code plugin bundling one orchestration subagent (`director`) and three skills (`plan-management`, `project-scaffolding`, `prior-art-research`) — distributed as a single-plugin marketplace so users can install it globally with `/plugin install` instead of copying `.md` files into every project.
+A Claude Code plugin bundling one orchestration subagent (`director`) and three skills (`plan-management`, `project-scaffolding-context`, `prior-art-research`) — distributed as a single-plugin marketplace so users can install it globally with `/plugin install` instead of copying `.md` files into every project.
 
 ## IMPORTANT
 Only update version in plugin.json when we make a new release 
@@ -26,7 +26,7 @@ There is no `build`, `test`, `lint`, or `run` target — Markdown + JSON only.
 
 ## Skills (bundled)
 - `skills/plan-management/SKILL.md` — canonical format spec and read/write instructions for the `PLAN.md` file director maintains at the repo root. Read it before editing director's plan management behavior or any agent that needs to inspect plan state.
-- `skills/project-scaffolding/SKILL.md` — context for setting up Claude Code in a project. Covers what information a scaffold requires (goal, stack, conventions, rules, permissions), what files a scaffolded project contains, and their templates. User-invocable. Read it before editing the Requirements Summary format, the spillover mechanics, or the reference template catalog.
+- `skills/project-scaffolding-context/SKILL.md` — context for setting up Claude Code in a project. Covers what information a scaffold requires, what files result, and their templates. User-invocable. Read it before editing the scaffold checklist, the CLAUDE.md template, or the reference template catalog.
 - `skills/prior-art-research/SKILL.md` — research-driven investigation procedure (Understand → Research → Synthesize) plus the unified findings-report format. Any agent — including director — can load it when researching a non-trivial bug, library/pattern choice, feature design, or architectural decision. Read it before editing the report format or the investigation procedure.
 
 ## Permissions

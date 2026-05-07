@@ -1,7 +1,7 @@
 {
   "name": "cc-project-management-plugin",
   "version": "0.15.0",
-  "description": "The director orchestration subagent for Claude Code — a powerful actor that drives multi-step work end-to-end via a sense-act loop, delegating to subagents only when warranted — bundled with the plan-management, project-scaffolding, and prior-art-research skills.",
+  "description": "The director orchestration subagent for Claude Code — a powerful actor that drives multi-step work end-to-end via a sense-act loop, delegating to subagents only when warranted — bundled with the plan-management, project-scaffolding-context, and prior-art-research skills.",
   "author": {
     "name": "tut1vog"
   },

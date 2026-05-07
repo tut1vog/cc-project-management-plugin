@@ -1,5 +1,5 @@
 ---
-name: project-scaffolding
+name: project-scaffolding-context
 description: Domain knowledge for setting up or refreshing Claude Code in a project — what information a scaffold requires, what files result, and their templates.
 when_to_use: Triggers on "scaffold a project", "set up Claude Code", "establish or change the current goal", writing CLAUDE.md or .claude/rules.
 user-invocable: true

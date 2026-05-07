@@ -1,6 +1,6 @@
 # Claude Code Project Management Plugin
 
-A Claude Code plugin that manages and automates Claude Code projects — from initial setup through ongoing development. Install it once and get the `director` orchestration subagent plus the `plan-management`, `project-scaffolding`, and `prior-art-research` skills, for structured planning, execution, research, and verification across every project you work in.
+A Claude Code plugin that manages and automates Claude Code projects — from initial setup through ongoing development. Install it once and get the `director` orchestration subagent plus the `plan-management`, `project-scaffolding-context`, and `prior-art-research` skills, for structured planning, execution, research, and verification across every project you work in.
 
 ## Prerequisites
 
@@ -21,7 +21,7 @@ To pick up a new version later, re-run `/plugin install cc-project-management-pl
 
 ## Getting started
 
-To set up Claude Code for a project, ask director (or any agent) to set up the project — it will load the `project-scaffolding` skill and run Discovery: a short interview to capture the goal, stack, conventions, rules, and permissions, then write `CLAUDE.md`, `CLAUDE.local.md`, rule files, and `.claude/settings.local.json`.
+To set up Claude Code for a project, ask director (or any agent) to set up the project — it will load the `project-scaffolding-context` skill and run Discovery: a short interview to capture the goal, stack, conventions, rules, and permissions, then write `CLAUDE.md`, `CLAUDE.local.md`, rule files, and `.claude/settings.local.json`.
 
 Once setup is done, director plans and executes the work. You can launch director at any time with a new goal — a feature, a refactor, a bug fix — and it will plan, dispatch, verify, and commit until the goal is met.
 
@@ -31,7 +31,7 @@ claude --agent cc-project-management-plugin:director
 
 ### Project documentation
 
-The `project-scaffolding` skill asks where project documentation lives during Discovery (e.g. `docs/`) and writes a path-scoped `.claude/rules/documentation.md` capturing the conventions to follow. Director then writes entries to that folder after passed tasks that introduce architecturally significant content — a new third-party dependency, external API integration, persisted data shape, or captured design decision — without prompting on every write; the loaded rule constrains the path and style.
+The `project-scaffolding-context` skill asks where project documentation lives during Discovery (e.g. `docs/`) and writes a path-scoped `.claude/rules/documentation.md` capturing the conventions to follow. Director then writes entries to that folder after passed tasks that introduce architecturally significant content — a new third-party dependency, external API integration, persisted data shape, or captured design decision — without prompting on every write; the loaded rule constrains the path and style.
 
 Opt out during Discovery to skip the rule and the maintenance step entirely.
 
@@ -46,6 +46,6 @@ Autonomous technical director for complex multi-step work. Acts as a powerful ac
 The plugin bundles three skills:
 
 - **`plan-management`** — canonical format and read/write instructions for the `PLAN.md` file director maintains at the repo root. Loaded by director on demand when the goal warrants persisting a plan.
-- **`project-scaffolding`** — context for setting up Claude Code in a project: what information a scaffold requires, what files result, and their templates. User-invocable — load it before asking to scaffold a project or be grilled about project setup.
+- **`project-scaffolding-context`** — context for setting up Claude Code in a project: what information a scaffold requires, what files result, and their templates. User-invocable — load it before asking to scaffold a project or be grilled about project setup.
 - **`prior-art-research`** — research procedure and report format for gathering evidence and synthesizing findings on technical questions. Available to any agent or director directly.
 
