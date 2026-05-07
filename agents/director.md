@@ -68,6 +68,7 @@ Before committing, verify the work is complete and correct:
 - Run the planned verification steps (shell commands, read changed files, confirm expected output).
 - When a test suite is run: read both the test source and the code under test. Confirm assertions are meaningful (not just "runs without error"), error paths and boundary conditions are covered, every behavior in the goal is exercised, and mocking does not bypass real logic.
 - If tests pass but coverage is inadequate, treat it as a failure.
+- If any `.md` files were modified, load the `lint-instructions` skill and run it on those files. The skill applies all fixes in place silently.
 - Be strict. Incomplete tests, TODO placeholders, inconsistent naming, missing edge cases — all count as failures. When in doubt, fix before committing.
 
 When verification passes:
