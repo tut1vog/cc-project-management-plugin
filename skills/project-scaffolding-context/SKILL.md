@@ -7,15 +7,15 @@ user-invocable: true
 
 > **Context skill.** This skill provides context only. Read and internalize it; do not prompt the user for a next action. Acknowledge with exactly: "Context loaded."
 
-## Pre-write checklist
+## Scaffold inputs
 
-Confirm these five topics with the user, then show the proposed file list for approval before writing anything:
+A successful scaffold requires these five areas confirmed with the user before any files are written:
 
-- [ ] **Goal** — what the agent should achieve in this iteration
-- [ ] **Stack** — language, runtime, key frameworks, deployment target
-- [ ] **Conventions** — commit style, linting/formatting, naming conventions, license
-- [ ] **Rules** — which `.claude/rules/*.md` files to create
-- [ ] **Permissions** — what the agent may do autonomously
+- **Goal** — what the agent should achieve in this iteration
+- **Stack** — language, runtime, key frameworks, deployment target
+- **Conventions** — commit style, linting/formatting, naming conventions, license
+- **Rules** — which `.claude/rules/*.md` files to create
+- **Permissions** — what the agent may do autonomously
 
 ## Goal
 
@@ -23,11 +23,66 @@ Project knowledge that shouldn't be tracked by git goes into `CLAUDE.local.md`. 
 
 Ensure `.gitignore` contains `*.local.*` to exclude `CLAUDE.local.md`.
 
-Create `.claudeignore` using `examples/.claudeignore` as the starting template; remove sections that don't apply to the project's stack and add any project-specific entries discovered during Discovery.
+Create `.claudeignore` using `examples/.claudeignore` as the starting template; remove sections that don't apply to the project's stack and add any project-specific entries.
 
 ## Stack
 
 Goes into `CLAUDE.md` under the `## Stack` section.
+
+## Conventions
+
+Commit style (Conventional Commits when `plan-management` is in use, for its reserved prefixes `plan:`, `chore(ai):`, `Task:`), linting/formatting tools, naming conventions, license. Reflected in `CLAUDE.md`'s Canonical Commands section and informs rule files.
+
+## Rules
+
+Which `.claude/rules/*.md` files to create. A rule file without `paths:` frontmatter auto-loads every session; a rule with `paths:` loads only when a matching file enters context.
+
+```markdown
+---
+paths:                 # Optional: list of globs. Omit for rules that auto-load every session.
+  - <glob>
+---
+
+# <Rule title>
+
+## Rules
+- <specific, actionable rule>
+
+## Examples
+<1–3 short examples.>
+```
+
+Reference templates in `examples/`:
+
+| ID | Path | Description | Slots |
+|---|---|---|---|
+| `git` | `examples/git.md` | Conventional Commits + `plan-management`'s reserved prefixes; git hygiene | type subset, scopes, release tag format, commit ownership |
+| `comment` | `examples/comment.md` | Code comment policy; suppresses verbose docstrings | none |
+| `claudeignore` | `examples/.claudeignore` | Universal `.claudeignore` starter; excludes build artifacts, deps, generated files, and logs | none |
+
+When a project documentation folder exists (`doc/`, `docs/`, etc.), `CLAUDE.md` carries a one-line pointer to it and `.claude/rules/documentation.md` governs it (path-scoped to `<doc_path>/**`).
+
+## Permissions
+
+What the agent may do autonomously. Goes into `.claude/settings.local.json` (gitignored; `.claude/settings.json` if the user opts for committed permissions).
+
+Eight categories map to settings.json entries:
+
+| Category | What it covers | Maps to |
+|---|---|---|
+| Bash — allowed | build tools, linters, test runners, package managers | `Bash(npm run *)`, `Bash(git *)` in `allow` |
+| Bash — denied | commands that must never run (`rm -rf`, `sudo`, deploy scripts) | `Bash(rm -rf *)`, `Bash(sudo *)` in `deny` |
+| File creation | freely, restricted to paths, or confirm first | `Write` / `Edit` / `MultiEdit` in `allow`, optionally path-scoped |
+| Protected paths | files/dirs that must not be modified (`.env`, `credentials.*`, prod configs) | `Read(<path>)` and `Edit(<path>)` in `deny` |
+| Git commits | auto-commit, push to remote, etc. | `Bash(git commit *)`, `Bash(git push *)` in `allow` / `deny` |
+| Network access | `WebSearch` / `WebFetch` during implementation | `WebFetch` / `WebSearch` in `allow` or `deny` |
+| Package management | install / upgrade / remove dependencies | relevant patterns in `allow` |
+| Agent dispatch | which subagents director may spawn | `Agent(*)` or `Agent(name)` in `allow` |
+| Always confirm | operations that always require user approval | omit from all lists — unmatched operations prompt at runtime |
+
+`defaultMode` accepts: `"acceptEdits"` (default), `"default"`, `"dontAsk"`, `"plan"`, `"bypassPermissions"`. Default path is `.claude/settings.local.json` (gitignored).
+
+`ask` lists operations requiring user confirmation. `additionalDirectories` grants access to paths outside the project root. See `examples/settings.json`.
 
 ## CLAUDE.md
 
@@ -65,58 +120,3 @@ The template below is a reference. Sections are customizable — add, remove, or
 
 > Project documentation lives at `<doc_path>/`. Do not overwrite human-authored content.
 ```
-
-## Conventions
-
-Commit style (Conventional Commits when `plan-management` is in use, for its reserved prefixes `plan:`, `chore(ai):`, `Task:`), linting/formatting tools, naming conventions, license. Reflected in `CLAUDE.md`'s Canonical Commands section and informs rule files.
-
-## Rules
-
-Which `.claude/rules/*.md` files to create. A rule file without `paths:` frontmatter auto-loads every session; a rule with `paths:` loads only when a matching file enters context.
-
-```markdown
----
-paths:                 # Optional: list of globs. Omit for rules that auto-load every session.
-  - <glob>
----
-
-# <Rule title>
-
-## Rules
-- <specific, actionable rule>
-
-## Examples
-<1–3 short examples.>
-```
-
-Reference templates in `references/`:
-
-| ID | Path | Description | Slots |
-|---|---|---|---|
-| `git` | `references/git.md` | Conventional Commits + `plan-management`'s reserved prefixes; git hygiene | type subset, scopes, release tag format, commit ownership |
-| `comment` | `references/comment.md` | Code comment policy; suppresses verbose docstrings | none |
-| `claudeignore` | `examples/.claudeignore` | Universal `.claudeignore` starter; excludes build artifacts, deps, generated files, and logs | none |
-
-When a project documentation folder exists (`doc/`, `docs/`, etc.), `CLAUDE.md` carries a one-line pointer to it and `.claude/rules/documentation.md` governs it (path-scoped to `<doc_path>/**`).
-
-## Permissions
-
-What the agent may do autonomously. Goes into `.claude/settings.local.json` (gitignored; `.claude/settings.json` if the user opts for committed permissions).
-
-Eight categories map to settings.json entries:
-
-| Category | What it covers | Maps to |
-|---|---|---|
-| Bash — allowed | build tools, linters, test runners, package managers | `Bash(npm run *)`, `Bash(git *)` in `allow` |
-| Bash — denied | commands that must never run (`rm -rf`, `sudo`, deploy scripts) | `Bash(rm -rf *)`, `Bash(sudo *)` in `deny` |
-| File creation | freely, restricted to paths, or confirm first | `Write` / `Edit` / `MultiEdit` in `allow`, optionally path-scoped |
-| Protected paths | files/dirs that must not be modified (`.env`, `credentials.*`, prod configs) | `Read(<path>)` and `Edit(<path>)` in `deny` |
-| Git commits | auto-commit, push to remote, etc. | `Bash(git commit *)`, `Bash(git push *)` in `allow` / `deny` |
-| Network access | `WebSearch` / `WebFetch` during implementation | `WebFetch` / `WebSearch` in `allow` or `deny` |
-| Package management | install / upgrade / remove dependencies | relevant patterns in `allow` |
-| Agent dispatch | which subagents director may spawn | `Agent(*)` or `Agent(name)` in `allow` |
-| Always confirm | operations that always require user approval | omit from all lists — unmatched operations prompt at runtime |
-
-`defaultMode` accepts: `"acceptEdits"` (default), `"default"`, `"dontAsk"`, `"plan"`, `"bypassPermissions"`. Default path is `.claude/settings.local.json` (gitignored).
-
-`ask` lists operations requiring user confirmation. `additionalDirectories` grants access to paths outside the project root. See `examples/settings.json`.
