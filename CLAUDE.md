@@ -2,9 +2,6 @@
 
 A Claude Code plugin bundling one orchestration subagent (`director`) and three skills (`plan-management`, `project-scaffolding-context`, `prior-art-research`) — distributed as a single-plugin marketplace so users can install it globally with `/plugin install` instead of copying `.md` files into every project.
 
-## IMPORTANT
-Only update version in plugin.json when we make a new release 
-
 ## Stack
 - Language / runtime: **none at build time** — the repo is Markdown (agent definitions, rules, docs) and JSON (plugin manifests).
 - No compile step, no test suite, no dependency lockfiles.
@@ -14,15 +11,9 @@ Only update version in plugin.json when we make a new release
 - Reload without restart:  `/reload-plugins` (inside a Claude Code session)
 - Validate JSON manifest:  `python3 -m json.tool .claude-plugin/plugin.json`
 - Validate marketplace:    `python3 -m json.tool .claude-plugin/marketplace.json`
-- Release (tag + push):    `git tag v<semver> && git push origin main --tags`
+- Release:                 `/release [major|minor|patch]`
 
 There is no `build`, `test`, `lint`, or `run` target — Markdown + JSON only.
-
-## Rules
-- `.claude/rules/git.md` — applies to every commit and tag
-- `.claude/rules/releasing.md` — applies when bumping the plugin version or cutting a release
-- `.claude/rules/agent-authoring.md` — applies when creating or editing files under `agents/` or `skills/`
-- `.claude/rules/no-legacy.md` — applies when editing any prose (agent prompts, skill prompts, rules, docs, READMEs)
 
 ## Skills (bundled)
 - `skills/plan-management/SKILL.md` — canonical format spec and read/write instructions for the `PLAN.md` file director maintains at the repo root. Read it before editing director's plan management behavior or any agent that needs to inspect plan state.
