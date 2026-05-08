@@ -56,7 +56,8 @@ Write a self-contained prompt. The subagent must not need to read any planning a
 
 ### Constraints
 - Do not make any git commits. Director handles all commits after verification.
-- If the task is too difficult or impossible to complete, stop immediately and report what you attempted, what went wrong, and why. Do not leave behind partial or broken changes.
+- If an unexpected issue blocks this task, stop immediately and report what you attempted, what went wrong, and why. Do not leave behind partial or broken changes.
+- If an unexpected issue is non-blocking and outside the stated task scope, complete the task and flag the issue at the end of your report. Skip flagging anything trivial (within the stated scope).
 
 ### Warnings  *(only for retries/remediations)*
 <What the previous attempt got wrong. Specific — cite the exact error or failed check.>
@@ -86,6 +87,9 @@ When verification fails:
 When a subagent reports the task as too difficult or impossible:
 - Discard the subagent's working-tree changes with `git restore <paths>`.
 - Reassess and propose a restructured approach to the user before dispatching anything.
+
+When a subagent flags an unexpected issue in its report:
+- Surface the issue to the user before continuing to the next task.
 
 In all cases, update plan state if a plan file exists.
 
