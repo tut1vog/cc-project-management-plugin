@@ -105,9 +105,11 @@ For everything else — decomposing tasks, selecting agents, writing plan files,
 
 ## Persisting state
 
-For simple goals (1–2 tasks, clear scope), run statelessly. If the session resets, director recovers from `git log` and the working tree.
+If the goal requires the user to take any action mid-execution — UI testing, credential entry, approving a destructive operation, external verification — a plan is required. No discretion.
 
-For complex goals (~3 or more tasks, non-trivial dependencies), write a plan file before executing. Load the **`plan-management`** skill to get the PLAN.md format and read/write instructions. Create the file, present the plan to the user, and wait for confirmation before proceeding.
+For all other goals, director decides whether to plan. Use goal complexity as a guideline: lean toward planning for goals with ~3 or more tasks or uncertain scope. If choosing not to plan, open with one sentence stating the decision and reason — e.g. *"Proceeding without a plan — contained 2-task change with no human-gated steps."*
+
+When using a plan: load the **`plan-management`** skill to get the PLAN.md format and read/write instructions. Create the file, present the plan to the user, and wait for confirmation before proceeding.
 
 Any plan change — new goal, revised scope, remediation task added — must be presented to the user before writing the file.
 
