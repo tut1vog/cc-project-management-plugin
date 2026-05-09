@@ -16,10 +16,10 @@
       "WebFetch"
     ],
     "ask": [
-      "Bash(git push *)"
+      "Bash(git push *)",
+      "Bash(rm -rf *)"
     ],
     "deny": [
-      "Bash(rm -rf *)",
       "Bash(sudo *)",
       "Read(.env)",
       "Read(./secrets/**)"

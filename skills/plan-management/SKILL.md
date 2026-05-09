@@ -1,6 +1,7 @@
 ---
 name: plan-management
-description: Read and write the project plan that director maintains in PLAN.md at the repo root. Use when you need to know the current plan, derive task status, find the next pending task, or update task status after a task event. Triggers on "current plan", "task status", "what's been done", "is this task in progress", "mark task done".
+description: Format and write protocol for the PLAN.md file director maintains at the repo root. Use when you need to update PLAN.md, mark a task done or failed, add a remediation task, or understand the plan format. Triggers on "update PLAN.md", "mark task done", "mark task failed", "add a task", "plan format".
+user-invocable: true
 ---
 
 The project plan lives in **`PLAN.md`** at the repo root. Director creates and maintains this file using the Read and Edit tools. No helper command or script is required.
@@ -33,10 +34,6 @@ Goal: <high-level goal description>
 | `- [ ] Tn: <title>` | not started |
 | `- [x] Tn: <title>` | done |
 | `- [!] Tn: <title>` | failed |
-
-## Reading the plan
-
-Read PLAN.md with the Read tool. To find the next task to dispatch, scan for the first `- [ ]` line.
 
 ## Writing the plan
 

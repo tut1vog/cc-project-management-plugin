@@ -1,6 +1,6 @@
 # Claude Code Project Management Plugin
 
-A Claude Code plugin that manages and automates Claude Code projects — from initial setup through ongoing development. Install it once and get the `director` orchestration subagent plus the `plan-management` and `project-scaffolding-context` skills, for structured planning, execution, and verification across every project you work in.
+A Claude Code plugin that gives you `director` — a ReAct agent that replaces Claude Code's native agent with explicit rules for when to act directly, when to delegate to subagents, and when to commit. Install it once and get `director` plus four bundled skills (`plan-management`, `project-scaffolding`, `lint-instructions`, `web-research`) available across every project you work in, without copying any files.
 
 ## Prerequisites
 
@@ -21,19 +21,15 @@ To pick up a new version later, re-run `/plugin install cc-project-management-pl
 
 ## Getting started
 
-To set up Claude Code for a project, ask director (or any agent) to set up the project — it will load the `project-scaffolding-context` skill and run Discovery: a short interview to capture the goal, stack, conventions, rules, and permissions, then write `CLAUDE.md`, `CLAUDE.local.md`, rule files, and `.claude/settings.local.json`.
-
-Once setup is done, director plans and executes the work. You can launch director at any time with a new goal — a feature, a refactor, a bug fix — and it will plan, dispatch, verify, and commit until the goal is met.
+Launch director with a goal:
 
 ```
 claude --agent cc-project-management-plugin:director
 ```
 
-### Project documentation
+To set up Claude Code for a new project, ask director to scaffold the project. It will run a short Discovery interview to capture the goal, stack, conventions, rules, and permissions, then write `CLAUDE.md`, `CLAUDE.local.md`, rule files, and `.claude/settings.local.json`.
 
-The `project-scaffolding-context` skill asks where project documentation lives during Discovery (e.g. `docs/`) and writes a path-scoped `.claude/rules/documentation.md` capturing the conventions to follow. Director then writes entries to that folder after passed tasks that introduce architecturally significant content — a new third-party dependency, external API integration, persisted data shape, or captured design decision — without prompting on every write; the loaded rule constrains the path and style.
-
-Opt out during Discovery to skip the rule and the maintenance step entirely.
+For ongoing work, give director a goal — a feature, a refactor, a bug fix — and it will plan, execute, and commit until done.
 
 ## Agents
 
@@ -43,8 +39,10 @@ Autonomous technical director for complex multi-step work. Acts as a powerful ac
 
 ## Skills
 
-The plugin bundles two skills:
+The plugin bundles four skills:
 
-- **`plan-management`** — canonical format and read/write instructions for the `PLAN.md` file director maintains at the repo root. Loaded by director on demand when the goal warrants persisting a plan.
-- **`project-scaffolding-context`** — context for setting up Claude Code in a project: what information a scaffold requires, what files result, and their templates. User-invocable — load it before asking to scaffold a project or be grilled about project setup.
+- **`plan-management`** — format and write protocol for the `PLAN.md` file director maintains at the repo root. Director uses it to structure and track complex multi-step tasks.
+- **`project-scaffolding`** — context for initializing a Claude Code project following best practices: what a scaffold requires, what files result, and their templates. User-invocable.
+- **`lint-instructions`** — cleans up documentation bad smells (duplication, verbosity, ambiguity) after an agent edits instruction files. User-invocable.
+- **`web-research`** — researches a topic online using web sources, GitHub, and official docs. Synthesizes findings inline or saves to disk. User-invocable.
 

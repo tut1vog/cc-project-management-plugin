@@ -1,10 +1,23 @@
 # cc-project-management-plugin
 
-A Claude Code plugin bundling one orchestration subagent (`director`) and two skills (`plan-management`, `project-scaffolding-context`) — distributed as a single-plugin marketplace so users can install it globally with `/plugin install` instead of copying `.md` files into every project.
+## Intention
 
-## Stack
-- Language / runtime: **none at build time** — the repo is Markdown (agent definitions, rules, docs) and JSON (plugin manifests).
-- No compile step, no test suite, no dependency lockfiles.
+Developers using Claude Code to build projects need a capable, opinionated agent in every session — one that acts directly, knows when to delegate to subagents, and knows when to commit. Claude Code's native agent has no explicit rules for either. This plugin solves that by distributing `director`, a ReAct agent whose system prompt encodes those rules, as a globally-installable Claude Code plugin. Instead of copy-pasting `.md` files into every project, users install once and get `director` everywhere.
+
+The bundled skills extend `director`'s capabilities: managing a structured plan for complex tasks, initializing Claude Code projects following best practices, keeping documentation clean after agent edits, and doing web research to inform decisions.
+
+## How the project works
+
+This repo is pure Markdown and JSON — no build step, no test suite, no dependencies. Shipping a new behavior means editing the right `.md` file and bumping the version.
+
+**Key files:**
+- `agents/director.md` — the core artifact. The system prompt here is what users get in every session.
+- `skills/plan-management/SKILL.md` — teaches director how to structure and track a multi-step plan in `PLAN.md`. Read before editing director's planning behavior.
+- `skills/project-scaffolding/SKILL.md` — teaches director how to initialize a Claude Code project following best practices. Read before editing the scaffold checklist or CLAUDE.md templates.
+- `skills/lint-instructions/SKILL.md` — cleans up documentation bad smells after an agent edits instruction files. Read before editing lint rules or bad-smell definitions.
+- `skills/web-research/SKILL.md` — enables web search for decision-making and future reference. Read before editing research behavior.
+- `.claude-plugin/plugin.json` — the plugin manifest. `version` here must match the release tag.
+- `.claude/rules/` — authoring constraints that apply to every edit in this repo.
 
 ## Canonical Commands
 - Local plugin test:       `claude --plugin-dir ./`
@@ -13,11 +26,7 @@ A Claude Code plugin bundling one orchestration subagent (`director`) and two sk
 - Validate marketplace:    `python3 -m json.tool .claude-plugin/marketplace.json`
 - Release:                 `/release [major|minor|patch]`
 
-There is no `build`, `test`, `lint`, or `run` target — Markdown + JSON only.
-
-## Skills (bundled)
-- `skills/plan-management/SKILL.md` — canonical format spec and read/write instructions for the `PLAN.md` file director maintains at the repo root. Read it before editing director's plan management behavior or any agent that needs to inspect plan state.
-- `skills/project-scaffolding-context/SKILL.md` — context for setting up Claude Code in a project. Covers what information a scaffold requires, what files result, and their templates. User-invocable. Read it before editing the scaffold checklist, the CLAUDE.md template, or the reference template catalog.
-
-## Permissions
-Director's permissions for this repo live in the maintainer's local `.claude/settings.local.json` (gitignored).
+## Constraints
+- All agent and skill bodies must be project-agnostic — no hard-coded paths, no assumptions about the consumer's stack. See `.claude/rules/authoring.md`.
+- Director owns all git commits in this repo. See `.claude/rules/git.md`.
+- Permissions for this repo live in the maintainer's local `.claude/settings.local.json` (gitignored).
