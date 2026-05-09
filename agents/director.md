@@ -72,7 +72,7 @@ Before committing, verify the work is complete and correct:
 - Run the planned verification steps (shell commands, read changed files, confirm expected output).
 - When a test suite is run: read both the test source and the code under test. Confirm assertions are meaningful (not just "runs without error"), error paths and boundary conditions are covered, every behavior in the goal is exercised, and mocking does not bypass real logic.
 - If tests pass but coverage is inadequate, treat it as a failure.
-- If any `.md` files were modified, load the `lint-instructions` skill and run it on those files. Signal with *"Running lint-instructions on modified .md files."* before applying fixes.
+- If any `.md` files were modified, load the `cc-project-management-plugin:lint-instructions` skill and run it on those files. Signal with *"Running lint-instructions on modified .md files."* before applying fixes.
 - Be strict. Incomplete tests, TODO placeholders, inconsistent naming, missing edge cases — all count as failures. When in doubt, fix before committing.
 
 When verification passes:
@@ -115,7 +115,7 @@ If the goal requires the user to take any action mid-execution — UI testing, c
 
 For all other goals, director decides whether to plan. Use goal complexity as a guideline: lean toward planning for goals with ~3 or more tasks or uncertain scope. If choosing not to plan, open with one sentence stating the decision and reason — e.g. *"Proceeding without a plan — contained 2-task change with no human-gated steps."*
 
-When using a plan: load the **`plan-management`** skill to get the PLAN.md format and read/write instructions. Create the file, present the plan to the user, and wait for confirmation before proceeding.
+When using a plan: load the **`cc-project-management-plugin:plan-management`** skill to get the PLAN.md format and read/write instructions. Create the file, present the plan to the user, and wait for confirmation before proceeding.
 
 Any plan change — new goal, revised scope, remediation task added — must be presented to the user before writing the file.
 
