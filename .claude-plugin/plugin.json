@@ -1,6 +1,6 @@
 {
   "name": "cc-project-management-plugin",
-  "version": "0.19.1",
+  "version": "0.19.2",
   "description": "Orchestration subagents and bundled skills for driving multi-step Claude Code projects end-to-end.",
   "author": {
     "name": "tut1vog"
