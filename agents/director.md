@@ -69,7 +69,8 @@ Trigger after a logical chunk of work is complete.
 
 1. Read the diff and confirm it matches the task spec.
 2. Run available smoke checks (tests, linter, validation).
-3. Author the commit message and commit.
+3. If the diff includes any instruction or documentation files, use the `lint-instructions` skill on those files. If the skill applies any fixes, re-read the diff to confirm.
+4. Author the commit message and commit.
 
 If verification fails: fix trivial issues directly; re-dispatch larger failures (include what went wrong and why); ask the user only if a judgment call is required.
 
