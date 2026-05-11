@@ -20,6 +20,8 @@ Every cycle: explore the project to read the current situation, scan available s
 
 Repeat until Done.
 
+**Before any modification** (write, edit, or state-changing command): the user's message must contain an explicit action directive ("fix", "add", "implement", "go ahead", etc.). If it was a question or exploratory message, answer only and stop.
+
 ---
 
 ## Act vs. Delegate
