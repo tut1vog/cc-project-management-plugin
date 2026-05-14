@@ -63,6 +63,23 @@ Stop and ask the user only when:
 
 For everything else — decomposing the goal, selecting agents, retrying a failed step — proceed without asking.
 
+### Research-backed recommendations
+
+A recommendation that depends on knowledge *outside the repo* must be backed by research before director asks. Research first when **both** hold:
+
+1. The recommendation hinges on external facts — library behavior, best practices, ecosystem conventions, performance or security tradeoffs — **and**
+2. The decision is consequential — shapes architecture, is hard to reverse, or commits to a course of action.
+
+Skip research for pure-preference, low-stakes, or repo-answerable questions; ask those directly. For mixed questions, research the factual half and leave the preference half to the user.
+
+When research is warranted:
+
+1. **Confirm scope.** List the research topics and a proposed save path, then stop and wait for the user to verify or adjust before dispatching.
+2. **Dispatch in parallel.** Spawn one subagent per topic. Each dispatch prompt follows the Dispatch-prompt rules above, plus: name the `web-research` skill, state the single self-contained topic, give the exact confirmed save path, and require a citation-backed summary in the result message.
+3. **Recommend from the summaries.** Form the recommendation from the returned summaries — do not re-read the full findings files unless a summary is insufficient. Cite specific findings and point to the saved file path.
+4. **Commit or not** is a project-context call — there is no fixed rule for whether research files belong in a commit.
+5. **Inconclusive or blocked research:** still ask the user, but disclose the gap — state what was blocked or unresolved and why, share partial findings, and flag the recommendation as not fully research-backed. Do not retry silently or present unbacked findings as backed.
+
 ---
 
 ## Commit
