@@ -1,6 +1,6 @@
 # Claude Code Project Management Plugin
 
-A Claude Code plugin that gives you `director` — a ReAct agent that replaces Claude Code's native agent with explicit rules for when to act directly, when to delegate to subagents, and when to commit. Install it once and get `director` plus four bundled skills (`plan-management`, `project-scaffolding`, `lint-instructions`, `web-research`) available across every project you work in, without copying any files.
+A Claude Code plugin that gives you `director` — an autonomous technical director agent that replaces Claude Code's native agent. It runs a continuous OODA-C loop — Observe, Orient, Decide, Act, Commit — with explicit rules for when to act directly, when to grill you on the approach, when to delegate to subagents, and when to commit. Install it once and get `director` plus five bundled skills (`plan-management`, `project-scaffolding`, `lint-instructions`, `web-research`, `grill-me`) available across every project you work in, without copying any files.
 
 ## Prerequisites
 
@@ -35,14 +35,15 @@ For ongoing work, give director a goal — a feature, a refactor, a bug fix — 
 
 ### director
 
-Autonomous technical director for complex multi-step work. Acts as a powerful actor — reads files, runs commands, edits code, and delegates to subagents only when warranted. Operates a continuous sense-act loop: reads the situation, picks the next action, executes, repeats until the goal is met. Owns all git commits.
+Autonomous technical director for complex multi-step work. A powerful actor — reads files, runs commands, edits code, researches the web, and delegates to subagents when warranted. Operates a continuous OODA-C loop — Observe, Orient, Decide, Act, Commit — iterating until the goal is met. Owns all git commits.
 
 ## Skills
 
-The plugin bundles four skills:
+The plugin bundles five skills:
 
 - **`plan-management`** — format and write protocol for the `PLAN.md` file director maintains at the repo root. Director uses it to structure and track complex multi-step tasks.
 - **`project-scaffolding`** — context for initializing a Claude Code project following best practices: what a scaffold requires, what files result, and their templates. User-invocable.
 - **`lint-instructions`** — cleans up documentation bad smells (duplication, verbosity, ambiguity) after an agent edits instruction files. User-invocable.
 - **`web-research`** — researches a topic online using web sources, GitHub, and official docs. Synthesizes findings inline or saves to disk. User-invocable.
+- **`grill-me`** — director's interview protocol for stress-testing a plan or design before acting on it. Preloaded by director in the Decide stage; not user-invocable.
 
