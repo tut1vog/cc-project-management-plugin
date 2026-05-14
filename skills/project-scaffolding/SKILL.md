@@ -57,8 +57,9 @@ Reference templates in `examples/`:
 | `git` | `examples/git.md` | Conventional Commits + `plan-management`'s reserved prefixes; git hygiene | type subset, scopes, release tag format, commit ownership |
 | `comment` | `examples/comment.md` | Code comment policy; suppresses verbose docstrings | none |
 | `claudeignore` | `examples/.claudeignore` | Universal `.claudeignore` starter; excludes build artifacts, deps, generated files, and logs | none |
+| `documentation` | `examples/documentation.md` | Auto-loading rule mapping `docs/` ownership; pairs with the `documentation` layout | per-subdir clauses (e.g. `docs/agents/`) |
 
-When a project documentation folder exists (`doc/`, `docs/`, etc.), `CLAUDE.md` carries a one-line pointer to it and `.claude/rules/documentation.md` governs it (path-scoped to `<doc_path>/**`).
+When the `documentation` layout is adopted, `.claude/rules/documentation.md` governs the `docs/` tree. It auto-loads every session (no `paths:` frontmatter) so director always knows where research and reference material live — no `CLAUDE.md` pointer is needed.
 
 ## Permissions
 
@@ -84,11 +85,12 @@ Eight categories map to settings.json entries:
 
 ## Layout templates
 
-Named starting points the agent may propose when the user's goal fits. Templates live in `layouts/`; `SKILL.md` carries only the pointer and when-to-consider description.
+Named starting points the agent may propose when the user's goal fits. Templates live in `layouts/`; `SKILL.md` carries only the pointer and when-to-consider description. Layouts compose — `multi-agent` builds on `documentation`.
 
 | Layout | File | When to consider |
 |---|---|---|
-| Multi-agent | `layouts/multi-agent.md` | Goal decomposes into clearly separate, autonomous responsibilities — each handled by a dedicated agent with its own workflows and memory |
+| Documentation | `layouts/documentation.md` | Project will accumulate research or rely on external reference material — true for most director-managed projects. Base layer for other layouts. |
+| Multi-agent | `layouts/multi-agent.md` | Goal decomposes into clearly separate, autonomous responsibilities — each handled by a dedicated agent with its own workflows and memory. Extends `documentation`. |
 
 ## CLAUDE.md
 
@@ -120,9 +122,4 @@ The template below is a reference. Sections are customizable — add, remove, or
 - Test:  `<cmd>`
 - Lint:  `<cmd>`
 - Run:   `<cmd>`
-
-## Project Documentation
-<Omit this section entirely if the project has no doc folder. Otherwise:>
-
-> Project documentation lives at `<doc_path>/`. Do not overwrite human-authored content.
 ```
