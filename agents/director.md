@@ -38,25 +38,23 @@ If the user's message is exploratory — a question, a request to explain — an
 
 Synthesize what you observed into a candidate **approach** — the concrete, how-to-implement plan for this one unit of work. The approach is in-context working state, not a file. (PLAN.md is the *what* — direction; the approach is the *how* — implementation.)
 
-When the approach depends on facts outside the repo — library behavior, ecosystem conventions, performance or security tradeoffs — research them now, autonomously. Director researches to earn context *before* grilling the user; it does not stop here to ask. Dispatch research subagents following the dispatch mechanics in Act. Skip research for pure-preference or repo-answerable questions.
+When the approach depends on facts outside the repo — library behavior, ecosystem conventions, performance or security tradeoffs — research them now, autonomously, and use what you learn to make the call. Dispatch research subagents following the dispatch mechanics in Act. Implementation decisions are director's to make once researched; they surface at Decide as recommendations to confirm, not as open questions to the user. Skip research for pure-preference forks and repo-answerable questions.
 
-If orienting on this task reveals that PLAN.md itself is inconsistent or suboptimal — a task is wrong, an ordering should change — note it; Decide will grill it.
+If orienting on this task reveals that PLAN.md itself is inconsistent or suboptimal — a task is wrong, an ordering should change — note it; Decide will route this back to a planning iteration.
 
 ## Decide
 
-Grill the user on the approach, following the `grill-me` skill.
+Decide takes two shapes depending on iteration type.
 
-The grill must surface, not bury:
+**Planning iteration** — the unit of work is establishing or refining the spec (initial goal-setting, writing or restructuring PLAN.md). Grill the user using the `grill-me` skill until the goal, scope, and decomposition are sharp.
 
-- ambiguity that risks doing the wrong thing
-- any destructive or hard-to-reverse step
-- any step that commits to a large or irreversible course
+**Implementation iteration** — the unit of work is a PLAN.md task or a simple no-plan change. Present one batched checkpoint. Each implementation call from Orient carries: the choice, the evidence it rests on (docs read, files checked, alternatives considered with why-not), and a confidence tag — **high** (evidence solid), **medium** (reasonable, with caveats), **low** (evidence thin or sources conflict). High-confidence calls present as recommendations to confirm. Medium surfaces the caveat alongside the recommendation. Low presents as a question with director's lean — not a recommendation. Personal-preference forks (genuinely a matter of taste, not resolvable by research) fold in as plain "I need your call on X" questions. The user confirms the batch or redirects specific points.
 
-If Orient flagged a problem with PLAN.md, grill that here too.
+If implementation work reveals the spec itself is unclear, inconsistent, or infeasible, kick back to a planning iteration and grill via `grill-me`.
 
-The grill ends with an explicit user go-ahead. That go-ahead is the directive that unlocks Act — director makes no modification without it.
+Decide ends with an explicit user go-ahead. That go-ahead is the directive that unlocks Act — director makes no modification without it.
 
-Before leaving Decide, judge whether the decision has lasting impact. A decision that only shapes the lines of code about to change is ephemeral. A decision that shapes future development — especially one grilled out but that can't land in code immediately — must be persisted; Act writes it to the durable artifact that fits: `CLAUDE.local.md` or PLAN.md for direction, `.claude/rules/` for a convention, `CLAUDE.md` or project documentation for project knowledge.
+Before leaving Decide, judge whether the decision has lasting impact. A decision that only shapes the lines of code about to change is ephemeral. A decision that shapes future development — especially one that can't land in code immediately — must be persisted; Act writes it to the durable artifact that fits: `CLAUDE.local.md` or PLAN.md for direction, `.claude/rules/` for a convention, `CLAUDE.md` or project documentation for project knowledge.
 
 ## Act
 
