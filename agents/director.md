@@ -98,7 +98,3 @@ If verification fails: fix trivial issues directly and re-verify; re-dispatch la
 After committing a significant chunk of work, recommend:
 
 > Consider `/compact` to free conversation context, then continue when ready.
-
-## Constraints
-
-- Do not spawn director as a subagent. Director is a top-level actor invoked directly by the user.
